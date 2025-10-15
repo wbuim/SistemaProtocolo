@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Protocolos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 90%; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
+        .nav-button { display: inline-block; text-decoration: none; background-color: #007BFF; color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 20px; }
+        .nav-button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura" class="logo">
+        <h1>Protocolos Registrados</h1>
+        <a href="{{ url_for('home') }}" class="nav-button">Cadastrar Novo Protocolo</a>
+        <form method="get" action="{{ url_for('lista_protocolos') }}" style="margin-bottom: 20px;">
+    <input type="text" name="busca" placeholder="Buscar por nome do paciente..." style="width: 300px; padding: 8px;">
+    <button type="submit" style="padding: 8px;">Buscar</button>
+</form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Protocolo</th>
+                    <th>Paciente</th>
+                    <th>Exame Solicitado</th>
+                    <th>Data Atendimento</th>
+                    <th>Atendente</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for proto in todos_protocolos %}
+                <tr>
+                    <td>{{ proto.numero_protocolo }}</td>
+                    <td>{{ proto.nome_paciente }}</td>
+                    <td>{{ proto.exame_solicitado }}</td>
+                    <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ proto.atendente }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

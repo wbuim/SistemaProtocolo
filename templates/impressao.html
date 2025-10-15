@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Protocolo de Atendimento - {{ protocolo.numero_protocolo }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            margin: 20px;
+        }
+        .protocolo-container {
+            max-width: 800px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 30px;
+            border-radius: 8px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-section h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .info-section p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .info-section strong {
+            display: inline-block;
+            width: 180px; /* Alinha os valores */
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* Estilos para impressão */
+        @media print {
+            body { margin: 0; }
+            .protocolo-container { border: none; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="protocolo-container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura">
+            <h2>Comprovante de Agendamento</h2>
+        </div>
+
+        <div class="info-section">
+            <h3>Dados do Protocolo</h3>
+            <p><strong>Número do Protocolo:</strong> {{ protocolo.numero_protocolo }}</p>
+            <p><strong>Gerado em:</strong> {{ protocolo.data_criacao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
+            <p><strong>Atendente:</strong> {{ protocolo.atendente }}</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Dados do Paciente</h3>
+            <p><strong>Nome Completo:</strong> {{ protocolo.nome_paciente }}</p>
+        </div>
+
+        <div class="info-section">
+            <h3>Dados do Agendamento</h3>
+            <p><strong>Local/Unidade:</strong> {{ protocolo.local_unidade }}</p>
+            <p><strong>Exame Solicitado:</strong> {{ protocolo.exame_solicitado }}</p>
+            <p><strong>Especialidade:</strong> {{ protocolo.especialidade_solicitada }}</p>
+            <p><strong>Data do Atendimento:</strong> {{ protocolo.data_atendimento.strftime('%d/%m/%Y') }}</p>
+            <p><strong>Horário:</strong> {{ protocolo.hora_atendimento.strftime('%H:%M') }}</p>
+        </div>
+        
+        <div class="footer">
+            <p>Este é um comprovante gerado pelo sistema. Guarde-o para referência futura.</p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            window.print();
+        };
+    </script>
+</body>
+</html>
