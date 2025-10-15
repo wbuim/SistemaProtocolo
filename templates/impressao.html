@@ -19,12 +19,6 @@
         .header { text-align: center; margin-bottom: 15px; }
         .header img { max-width: 100px; }
         .header h2 { margin: 0; font-size: 20px; }
-        .info-section h3 {
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
         .info-section p { margin: 4px 0; font-size: 14px; }
         .info-section strong { display: inline-block; width: 150px; }
         .titulo-via { text-align: right; font-weight: bold; font-style: italic; color: #555; }
@@ -44,6 +38,7 @@
         </div>
         <div class="info-section">
             <p><strong>Nº Protocolo:</strong> {{ protocolo.numero_protocolo }}</p>
+            <p><strong>Emitido em:</strong> {{ protocolo.data_criacao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
             <p><strong>Exame:</strong> {{ protocolo.exame_solicitado }}</p>
@@ -59,6 +54,7 @@
         </div>
         <div class="info-section">
             <p><strong>Nº Protocolo:</strong> {{ protocolo.numero_protocolo }}</p>
+            <p><strong>Emitido em:</strong> {{ protocolo.data_criacao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
             <p><strong>Exame:</strong> {{ protocolo.exame_solicitado }}</p>
