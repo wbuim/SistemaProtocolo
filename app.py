@@ -1,5 +1,3 @@
-# app.py ATUALIZADO
-
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
@@ -8,20 +6,20 @@ from datetime import datetime
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
-
-# Configuração do Banco de Dados SQLite
-basedir = os.path.abspath(os.path.dirname(__file__)) # <-- ESTA LINHA ESTAVA A FALTAR
+basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'protocolos.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS ---
+# --- MODELO DO BANCO DE DADOS (COM NOVOS CAMPOS) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
     local_unidade = db.Column(db.String(100), nullable=False)
     medico_solicitante = db.Column(db.String(200))
+    unidade_origem = db.Column(db.String(100)) # <-- NOVO CAMPO
+    prioridade = db.Column(db.String(50))     # <-- NOVO CAMPO
     exame_solicitado = db.Column(db.String(200), nullable=False)
     especialidade_solicitada = db.Column(db.String(100))
     atendente = db.Column(db.String(100), nullable=False)
@@ -32,7 +30,6 @@ class Protocolo(db.Model):
         return f'<Protocolo {self.numero_protocolo}>'
 
 # --- USUÁRIOS COM NOME COMPLETO ---
-### MUDANÇA 1: Estrutura de usuários agora tem senha e nome completo.
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema'},
     'neto':  {'password': 'protocolo', 'full_name': 'Neto Buim'},
@@ -52,12 +49,10 @@ def login_page():
     if request.method == 'POST':
         username_form = request.form['username']
         password_form = request.form['password']
-        
-        ### MUDANÇA 2: A lógica de login agora verifica a senha dentro do dicionário.
         user_data = USUARIOS_CADASTRADOS.get(username_form)
         if user_data and user_data['password'] == password_form:
             session['username'] = username_form
-            session['full_name'] = user_data['full_name'] # Guarda o nome completo na sessão
+            session['full_name'] = user_data['full_name']
             return redirect(url_for('home'))
         else:
             error = 'Usuário ou senha inválida.'
@@ -65,30 +60,34 @@ def login_page():
 
 @app.route('/logout')
 def logout():
-    session.clear() # Limpa toda a sessão (username e full_name)
+    session.clear()
     return redirect(url_for('login_page'))
 
+# --- ROTA DA LISTA (COM LÓGICA DE BUSCA EXPANDIDA) ---
 @app.route('/lista')
 def lista_protocolos():
     if 'username' not in session:
         return redirect(url_for('login_page'))
     
-    # Pega os valores da busca e do filtro da URL
     query = request.args.get('busca')
     filtro = request.args.get('filtro')
     
-    # Começa com uma consulta base que pode ser modificada
     consulta = Protocolo.query
     
     if query:
         if filtro == 'protocolo':
-            # Se o filtro for 'protocolo', busca no campo numero_protocolo
             consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
-        else:
-            # Por padrão (ou se o filtro for 'nome'), busca no campo nome_paciente
+        elif filtro == 'especialidade':
+            consulta = consulta.filter(Protocolo.especialidade_solicitada.ilike(f'%{query}%'))
+        elif filtro == 'medico':
+            consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
+        elif filtro == 'prioridade':
+            consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
+        elif filtro == 'origem':
+            consulta = consulta.filter(Protocolo.unidade_origem.ilike(f'%{query}%'))
+        else: # Filtro padrão por 'nome'
             consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
             
-    # Aplica a ordenação no final e executa a consulta
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
     
     return render_template('lista_protocolos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'])
@@ -100,6 +99,7 @@ def imprimir_protocolo(protocolo_id):
     protocolo_para_imprimir = Protocolo.query.get_or_404(protocolo_id)
     return render_template('impressao.html', protocolo=protocolo_para_imprimir)
 
+# --- ROTA DE SALVAR (COM NOVOS CAMPOS) ---
 @app.route('/salvar_protocolo', methods=['POST'])
 def salvar_protocolo():
     if 'username' not in session:
@@ -115,9 +115,10 @@ def salvar_protocolo():
         nome_paciente=request.form['nome_paciente'],
         local_unidade=request.form['local_unidade'],
         medico_solicitante=request.form['medico_solicitante'],
+        unidade_origem=request.form['unidade_origem'], # <-- DADO NOVO SENDO SALVO
+        prioridade=request.form['prioridade'],         # <-- DADO NOVO SENDO SALVO
         exame_solicitado=request.form['exame_solicitado'],
         especialidade_solicitada=request.form['especialidade_solicitada'],
-        ### MUDANÇA 3: Salva o nome completo do atendente no banco de dados.
         atendente=session['full_name'],
         data_atendimento=datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date(),
         hora_atendimento=datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()
