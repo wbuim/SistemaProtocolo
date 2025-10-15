@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 0; /* Remove padding para a barra superior encostar */
+            padding: 0;
         }
         .header-bar {
             background-color: #e9ecef;
@@ -29,7 +29,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 90%;
+            max-width: 95%; /* Aumentei a largura para caber mais colunas */
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -38,7 +38,7 @@
         }
         h1 { text-align: center; color: #333; }
         .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } /* Diminuí a fonte da tabela */
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
         tr:nth-child(even) { background-color: #f9f9f9; }
@@ -72,6 +72,10 @@
                 <select name="filtro" style="padding: 8px;">
                     <option value="nome">Buscar por Nome</option>
                     <option value="protocolo">Buscar por Protocolo</option>
+                    <option value="especialidade">Buscar por Especialidade</option>
+                    <option value="medico">Buscar por Médico</option>
+                    <option value="prioridade">Buscar por Prioridade</option>
+                    <option value="origem">Buscar por Unidade de Origem</option>
                 </select>
                 <input type="text" name="busca" placeholder="Digite sua busca..." style="flex-grow: 1; padding: 8px;">
                 <button type="submit" style="padding: 8px 15px;">Buscar</button>
@@ -83,7 +87,7 @@
                         <th>Nº Protocolo</th>
                         <th>Paciente</th>
                         <th>Exame Solicitado</th>
-                        <th>Data Atendimento</th>
+                        <th>Unidade de Origem</th> <th>Prioridade</th> <th>Data Atendimento</th>
                         <th>Atendente</th>
                     </tr>
                 </thead>
@@ -93,7 +97,7 @@
                         <td>{{ proto.numero_protocolo }}</td>
                         <td>{{ proto.nome_paciente }}</td>
                         <td>{{ proto.exame_solicitado }}</td>
-                        <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ proto.unidade_origem }}</td> <td>{{ proto.prioridade }}</td> <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
                         <td>{{ proto.atendente }}</td>
                     </tr>
                     {% endfor %}
