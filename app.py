@@ -8,6 +8,9 @@ from datetime import datetime
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
+
+# Configuração do Banco de Dados SQLite
+basedir = os.path.abspath(os.path.dirname(__file__)) # <-- ESTA LINHA ESTAVA A FALTAR
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'protocolos.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
