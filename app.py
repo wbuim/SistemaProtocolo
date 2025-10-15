@@ -72,11 +72,25 @@ def logout():
 def lista_protocolos():
     if 'username' not in session:
         return redirect(url_for('login_page'))
+    
+    # Pega os valores da busca e do filtro da URL
     query = request.args.get('busca')
+    filtro = request.args.get('filtro')
+    
+    # Começa com uma consulta base que pode ser modificada
+    consulta = Protocolo.query
+    
     if query:
-        protocolos = Protocolo.query.filter(Protocolo.nome_paciente.ilike(f'%{query}%')).order_by(Protocolo.id.desc()).all()
-    else:
-        protocolos = Protocolo.query.order_by(Protocolo.id.desc()).all()
+        if filtro == 'protocolo':
+            # Se o filtro for 'protocolo', busca no campo numero_protocolo
+            consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
+        else:
+            # Por padrão (ou se o filtro for 'nome'), busca no campo nome_paciente
+            consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
+            
+    # Aplica a ordenação no final e executa a consulta
+    protocolos = consulta.order_by(Protocolo.id.desc()).all()
+    
     return render_template('lista_protocolos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'])
 
 @app.route('/imprimir/<int:protocolo_id>')
