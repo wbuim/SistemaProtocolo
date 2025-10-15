@@ -36,6 +36,7 @@ class Protocolo(db.Model):
 USUARIOS_CADASTRADOS = {
     'admin': 'senha123',
     'neto': 'protocolo'
+    'tuca': 'tuca'
 }
 
 # --- ROTAS DA APLICAÇÃO ---
