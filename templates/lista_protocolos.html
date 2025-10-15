@@ -29,7 +29,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 95%; /* Aumentei a largura para caber mais colunas */
+            max-width: 98%; /* Aumentei a largura para acomodar as novas colunas */
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -38,8 +38,8 @@
         }
         h1 { text-align: center; color: #333; }
         .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } /* Diminuí a fonte da tabela */
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; } /* Diminuí um pouco mais a fonte */
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-break: break-word; } /* Adicionado word-break */
         th { background-color: #f2f2f2; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         tr:hover { background-color: #f1f1f1; }
@@ -89,7 +89,7 @@
                         <th>Nº Protocolo</th>
                         <th>Paciente</th>
                         <th>Exame Solicitado</th>
-                        <th>Unidade de Origem</th>
+                        <th>Especialidade</th> <th>Médico Solicitante</th> <th>Unidade de Origem</th>
                         {% if is_admin %}
                         <th>Prioridade</th>
                         {% endif %}
@@ -103,7 +103,7 @@
                         <td>{{ proto.numero_protocolo }}</td>
                         <td>{{ proto.nome_paciente }}</td>
                         <td>{{ proto.exame_solicitado }}</td>
-                        <td>{{ proto.unidade_origem }}</td>
+                        <td>{{ proto.especialidade_solicitada }}</td> <td>{{ proto.medico_solicitante }}</td> <td>{{ proto.unidade_origem }}</td>
                         {% if is_admin %}
                         <td>{{ proto.prioridade }}</td>
                         {% endif %}
