@@ -15,8 +15,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Inicializa a extensão do banco de dados
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (A DEFINIÇÃO DO 'PROTOCOLO') ---
-# ESTA É A PARTE QUE ESTAVA FALTANDO PARA A ROTA '/lista'
+# --- MODELO DO BANCO DE DADOS (A ESTRUTURA DA TABELA) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
@@ -64,36 +63,26 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login_page'))
 
-# ROTA PARA A LISTA DE PROTOCOLOS (NOVA)
 @app.route('/lista')
 def lista_protocolos():
-    """ Rota para listar todos os protocolos, com funcionalidade de busca. """
     if 'username' not in session:
         return redirect(url_for('login_page'))
-
-    # Pega o termo de busca da URL (ex: /lista?busca=neto)
+    
     query = request.args.get('busca')
-
+    
     if query:
-        # Se houver um termo de busca, filtra os resultados
-        # O .ilike() faz uma busca "case-insensitive" (não diferencia maiúsculas de minúsculas)
-        # Os '%' são curingas que significam "qualquer coisa antes ou depois"
         protocolos = Protocolo.query.filter(Protocolo.nome_paciente.ilike(f'%{query}%')).order_by(Protocolo.id.desc()).all()
     else:
-        # Se não houver busca, mostra todos os protocolos
         protocolos = Protocolo.query.order_by(Protocolo.id.desc()).all()
-
+    
     return render_template('lista_protocolos.html', todos_protocolos=protocolos)
 
 @app.route('/imprimir/<int:protocolo_id>')
 def imprimir_protocolo(protocolo_id):
-    """ Busca um protocolo pelo ID e mostra a página de impressão. """
     if 'username' not in session:
         return redirect(url_for('login_page'))
     
-    # Busca o protocolo específico no banco de dados pelo seu ID
     protocolo_para_imprimir = Protocolo.query.get_or_404(protocolo_id)
-    
     return render_template('impressao.html', protocolo=protocolo_para_imprimir)
 
 @app.route('/salvar_protocolo', methods=['POST'])
