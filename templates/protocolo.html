@@ -9,7 +9,24 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
+            padding: 0; /* Removido o padding do body para a barra superior encostar */
+        }
+        .header-bar {
+            background-color: #e9ecef;
+            padding: 10px 20px; /* Adicionado padding lateral */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+        .header-bar a {
+            color: #dc3545;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .main-content {
+            padding: 20px; /* Conteúdo principal agora tem o padding */
         }
         .container {
             max-width: 600px;
@@ -19,24 +36,10 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        /* ESTILO PARA O LOGO */
-        .logo {
-            display: block;
-            margin: 0 auto 20px;
-            max-width: 150px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
+        h1 { text-align: center; color: #333; }
+        .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"],
         input[type="date"],
         input[type="time"],
@@ -45,7 +48,7 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box; /* Garante que o padding não afete a largura final */
+            box-sizing: border-box;
         }
         .button {
             display: block;
@@ -58,76 +61,64 @@
             font-size: 16px;
             cursor: pointer;
         }
-        .button:hover {
-            background-color: #0056b3;
-        }
+        .button:hover { background-color: #0056b3; }
         .nav-button {
-    display: inline-block;
-    text-decoration: none;
-    background-color: #6c757d;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-.nav-button:hover {
-    background-color: #5a6268;
-}
+            display: inline-block;
+            text-decoration: none;
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .nav-button:hover { background-color: #5a6268; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura" class="logo">
+    <div class="header-bar">
+        <span>Olá, <strong>{{ atendente_nome_completo }}</strong>!</span>
+        <a href="{{ url_for('logout') }}">Sair</a>
+    </div>
 
-        <h1>Gerar Novo Protocolo de Atendimento</h1>
-        <a href="{{ url_for('lista_protocolos') }}" class="nav-button">Ver Protocolos Salvos</a>
-        
-        <form action="/salvar_protocolo" method="post">
-
-            <div class="form-group">
-                <label for="nome_paciente">Nome do Paciente:</label>
-                <input type="text" id="nome_paciente" name="nome_paciente" required>
-            </div>
-
-            <div class="form-group">
-                <label for="local_unidade">Local/Unidade:</label>
-                <input type="text" id="local_unidade" name="local_unidade" required>
-            </div>
-
-            <div class="form-group">
-                <label for="medico_solicitante">Médico Solicitante:</label>
-                <input type="text" id="medico_solicitante" name="medico_solicitante">
-            </div>
-
-            <div class="form-group">
-                <label for="exame_solicitado">Exame Solicitado:</label>
-                <input type="text" id="exame_solicitado" name="exame_solicitado" required>
-            </div>
-
-            <div class="form-group">
-                <label for="especialidade_solicitada">Especialidade Solicitada:</label>
-                <input type="text" id="especialidade_solicitada" name="especialidade_solicitada">
-            </div>
-
-            <div class="form-group" style="display: none;">
-                <label for="atendente">Atendente:</label>
-                <input type="text" id="atendente" name="atendente" value="{{ atendente }}" readonly>
-            </div>
-
-            <div class="form-group">
-                <label for="data_atendimento">Data do Atendimento:</label>
-                <input type="date" id="data_atendimento" name="data_atendimento" required>
-            </div>
-
-            <div class="form-group">
-                <label for="horario_atendimento">Horário do Atendimento:</label>
-                <input type="time" id="horario_atendimento" name="horario_atendimento" required>
-            </div>
-
-            <button type="submit" class="button">Gerar e Imprimir Protocolo</button>
-
-        </form>
+    <div class="main-content">
+        <div class="container">
+            <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura" class="logo">
+            <h1>Gerar Novo Protocolo de Atendimento</h1>
+            <a href="{{ url_for('lista_protocolos') }}" class="nav-button">Ver Protocolos Salvos</a>
+            
+            <form action="/salvar_protocolo" method="post">
+                <div class="form-group">
+                    <label for="nome_paciente">Nome do Paciente:</label>
+                    <input type="text" id="nome_paciente" name="nome_paciente" required>
+                </div>
+                <div class="form-group">
+                    <label for="local_unidade">Local/Unidade:</label>
+                    <input type="text" id="local_unidade" name="local_unidade" required>
+                </div>
+                <div class="form-group">
+                    <label for="medico_solicitante">Médico Solicitante:</label>
+                    <input type="text" id="medico_solicitante" name="medico_solicitante">
+                </div>
+                <div class="form-group">
+                    <label for="exame_solicitado">Exame Solicitado:</label>
+                    <input type="text" id="exame_solicitado" name="exame_solicitado" required>
+                </div>
+                <div class="form-group">
+                    <label for="especialidade_solicitada">Especialidade Solicitada:</label>
+                    <input type="text" id="especialidade_solicitada" name="especialidade_solicitada">
+                </div>
+                <div class="form-group">
+                    <label for="data_atendimento">Data do Atendimento:</label>
+                    <input type="date" id="data_atendimento" name="data_atendimento" required>
+                </div>
+                <div class="form-group">
+                    <label for="horario_atendimento">Horário do Atendimento:</label>
+                    <input type="time" id="horario_atendimento" name="horario_atendimento" required>
+                </div>
+                <button type="submit" class="button">Gerar e Imprimir Protocolo</button>
+            </form>
+        </div>
     </div>
 
 </body>
