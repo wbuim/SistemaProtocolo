@@ -1,3 +1,4 @@
+# TESTE FINAL PARA FORÇAR A ATUALIZAÇÃO - 15/10/2025
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
