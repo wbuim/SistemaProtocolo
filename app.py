@@ -35,7 +35,7 @@ class Protocolo(db.Model):
 # --- USUÁRIOS (SIMPLIFICADO) ---
 USUARIOS_CADASTRADOS = {
     'admin': 'senha123',
-    'neto': 'protocolo'
+    'neto': 'protocolo',
     'tuca': 'tuca'
 }
 
