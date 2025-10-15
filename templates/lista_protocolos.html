@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Novo Protocolo</title>
+    <title>Lista de Protocolos</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,49 +29,30 @@
             padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 95%; /* Aumentei a largura para caber mais colunas */
             margin: auto;
             background: #fff;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         h1 { text-align: center; color: #333; }
         .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"],
-        input[type="date"],
-        input[type="time"],
-        select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; } /* Diminuí a fonte da tabela */
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f1f1; }
         .nav-button {
             display: inline-block;
             text-decoration: none;
-            background-color: #6c757d;
+            background-color: #007BFF;
             color: white;
             padding: 10px 15px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        .nav-button:hover { background-color: #5a6268; }
+        .nav-button:hover { background-color: #0056b3; }
     </style>
 </head>
 <body>
@@ -84,57 +65,54 @@
     <div class="main-content">
         <div class="container">
             <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura" class="logo">
-            <h1>Gerar Novo Protocolo de Atendimento</h1>
-            <a href="{{ url_for('lista_protocolos') }}" class="nav-button">Ver Protocolos Salvos</a>
-            
-            <form action="/salvar_protocolo" method="post">
-                <div class="form-group">
-                    <label for="nome_paciente">Nome do Paciente:</label>
-                    <input type="text" id="nome_paciente" name="nome_paciente" required>
-                </div>
-                <div class="form-group">
-                    <label for="local_unidade">Local/Unidade de Destino:</label>
-                    <input type="text" id="local_unidade" name="local_unidade" required>
-                </div>
-                <div class="form-group">
-                    <label for="medico_solicitante">Médico Solicitante:</label>
-                    <input type="text" id="medico_solicitante" name="medico_solicitante">
-                </div>
-                
-                <div class="form-group">
-                    <label for="unidade_origem">Unidade de Origem:</label>
-                    <input type="text" id="unidade_origem" name="unidade_origem">
-                </div>
+            <h1>Protocolos Registrados</h1>
+            <a href="{{ url_for('home') }}" class="nav-button">Cadastrar Novo Protocolo</a>
 
-                {% if is_admin %}
-                <div class="form-group">
-                    <label for="prioridade">Prioridade:</label>
-                    <select id="prioridade" name="prioridade">
-                        <option value="Rotina">Rotina</option>
-                        <option value="Urgente">Urgente</option>
-                        <option value="Emergência">Emergência</option>
-                    </select>
-                </div>
-                {% endif %}
-
-                <div class="form-group">
-                    <label for="exame_solicitado">Exame Solicitado:</label>
-                    <input type="text" id="exame_solicitado" name="exame_solicitado" required>
-                </div>
-                <div class="form-group">
-                    <label for="especialidade_solicitada">Especialidade Solicitada:</label>
-                    <input type="text" id="especialidade_solicitada" name="especialidade_solicitada">
-                </div>
-                <div class="form-group">
-                    <label for="data_atendimento">Data do Atendimento:</label>
-                    <input type="date" id="data_atendimento" name="data_atendimento" required>
-                </div>
-                <div class="form-group">
-                    <label for="horario_atendimento">Horário do Atendimento:</label>
-                    <input type="time" id="horario_atendimento" name="horario_atendimento" required>
-                </div>
-                <button type="submit" class="button">Gerar e Imprimir Protocolo</button>
+            <form method="get" action="{{ url_for('lista_protocolos') }}" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <select name="filtro" style="padding: 8px;">
+                    <option value="nome">Buscar por Nome</option>
+                    <option value="protocolo">Buscar por Protocolo</option>
+                    <option value="especialidade">Buscar por Especialidade</option>
+                    <option value="medico">Buscar por Médico</option>
+                    <option value="origem">Buscar por Unidade de Origem</option>
+                    {% if is_admin %}
+                    <option value="prioridade">Buscar por Prioridade</option>
+                    {% endif %}
+                </select>
+                <input type="text" name="busca" placeholder="Digite sua busca..." style="flex-grow: 1; padding: 8px;">
+                <button type="submit" style="padding: 8px 15px;">Buscar</button>
             </form>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nº Protocolo</th>
+                        <th>Paciente</th>
+                        <th>Exame Solicitado</th>
+                        <th>Unidade de Origem</th>
+                        {% if is_admin %}
+                        <th>Prioridade</th>
+                        {% endif %}
+                        <th>Data Atendimento</th>
+                        <th>Atendente</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for proto in todos_protocolos %}
+                    <tr>
+                        <td>{{ proto.numero_protocolo }}</td>
+                        <td>{{ proto.nome_paciente }}</td>
+                        <td>{{ proto.exame_solicitado }}</td>
+                        <td>{{ proto.unidade_origem }}</td>
+                        {% if is_admin %}
+                        <td>{{ proto.prioridade }}</td>
+                        {% endif %}
+                        <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ proto.atendente }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 

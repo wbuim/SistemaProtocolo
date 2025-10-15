@@ -12,7 +12,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 # --- MODELO DO BANCO DE DADOS (COM A CORREÇÃO) ---
-class Protocolo(db.Model): # <-- A CORREÇÃO ESTÁ AQUI! 'Model' com 'M' maiúsculo.
+class Protocolo(db.Model): # <-- 'Model' com 'M' maiúsculo.
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
