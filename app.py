@@ -7,19 +7,23 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'protocolos.db')
+
+# ### MUDANÇA PRINCIPAL AQUI ###
+# Alterado o nome do ficheiro do banco de dados para forçar a criação de um novo.
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v2.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS ---
-class Protocolo(db.Model):
+# --- MODELO DO BANCO DE DADOS (COM NOVOS CAMPOS) ---
+class Protocolo(db.model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
     local_unidade = db.Column(db.String(100), nullable=False)
     medico_solicitante = db.Column(db.String(200))
     unidade_origem = db.Column(db.String(100))
-    prioridade = db.Column(db.String(50), default='Rotina') # Adicionado um valor padrão
+    prioridade = db.Column(db.String(50), default='Rotina')
     exame_solicitado = db.Column(db.String(200), nullable=False)
     especialidade_solicitada = db.Column(db.String(100))
     atendente = db.Column(db.String(100), nullable=False)
@@ -30,7 +34,6 @@ class Protocolo(db.Model):
         return f'<Protocolo {self.numero_protocolo}>'
 
 # --- USUÁRIOS COM CARGOS (ROLES) ---
-### MUDANÇA 1: Adicionamos um 'role' para cada usuário.
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema', 'role': 'admin'},
     'neto':  {'password': 'protocolo', 'full_name': 'Neto Buim', 'role': 'user'},
@@ -41,7 +44,6 @@ USUARIOS_CADASTRADOS = {
 @app.route('/')
 def home():
     if 'username' in session:
-        # Passamos a informação se o usuário é admin ou não para o template
         is_admin = session.get('role') == 'admin'
         return render_template('protocolo.html', atendente_nome_completo=session['full_name'], is_admin=is_admin)
     return redirect(url_for('login_page'))
@@ -56,7 +58,7 @@ def login_page():
         if user_data and user_data['password'] == password_form:
             session['username'] = username_form
             session['full_name'] = user_data['full_name']
-            session['role'] = user_data['role'] # ### MUDANÇA 2: Guardamos o 'role' na sessão
+            session['role'] = user_data['role']
             return redirect(url_for('home'))
         else:
             error = 'Usuário ou senha inválida.'
@@ -79,11 +81,9 @@ def lista_protocolos():
     consulta = Protocolo.query
     
     if query:
-        # ### MUDANÇA 3: A busca por prioridade só funciona se o usuário for admin
         if filtro == 'prioridade' and is_admin:
             consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo':
-            # ... (outros filtros continuam iguais)
             consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
         elif filtro == 'especialidade':
             consulta = consulta.filter(Protocolo.especialidade_solicitada.ilike(f'%{query}%'))
@@ -110,8 +110,6 @@ def salvar_protocolo():
     if 'username' not in session:
         return redirect(url_for('login_page'))
     
-    # ### MUDANÇA 4: A prioridade só é lida do formulário se o usuário for admin.
-    # Caso contrário, o valor padrão 'Rotina' (definido no modelo) será usado.
     prioridade_valor = "Rotina"
     if session.get('role') == 'admin':
         prioridade_valor = request.form.get('prioridade', 'Rotina')
@@ -127,7 +125,7 @@ def salvar_protocolo():
         local_unidade=request.form['local_unidade'],
         medico_solicitante=request.form['medico_solicitante'],
         unidade_origem=request.form['unidade_origem'],
-        prioridade=prioridade_valor, # Usa a prioridade definida acima
+        prioridade=prioridade_valor,
         exame_solicitado=request.form['exame_solicitado'],
         especialidade_solicitada=request.form['especialidade_solicitada'],
         atendente=session['full_name'],
