@@ -106,6 +106,7 @@
                     <input type="text" id="unidade_origem" name="unidade_origem">
                 </div>
 
+                {% if is_admin %}
                 <div class="form-group">
                     <label for="prioridade">Prioridade:</label>
                     <select id="prioridade" name="prioridade">
@@ -114,6 +115,7 @@
                         <option value="Emergência">Emergência</option>
                     </select>
                 </div>
+                {% endif %}
 
                 <div class="form-group">
                     <label for="exame_solicitado">Exame Solicitado:</label>
