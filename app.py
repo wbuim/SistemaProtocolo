@@ -1,8 +1,7 @@
-# TESTE FINAL PARA FORÇAR A ATUALIZAÇÃO - 15/10/2025
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta # <-- Importamos o timedelta
 
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
@@ -12,8 +11,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (COM A CORREÇÃO) ---
-class Protocolo(db.Model): # <-- 'Model' com 'M' maiúsculo.
+# --- MODELO DO BANCO DE DADOS ---
+class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
@@ -99,8 +98,14 @@ def lista_protocolos():
 def imprimir_protocolo(protocolo_id):
     if 'username' not in session:
         return redirect(url_for('login_page'))
+    
     protocolo_para_imprimir = Protocolo.query.get_or_404(protocolo_id)
-    return render_template('impressao.html', protocolo=protocolo_para_imprimir)
+    
+    # ### MUDANÇA PRINCIPAL AQUI ###
+    # Pegamos a hora UTC do banco e subtraímos 3 horas para ajustar para o fuso de Brasília (UTC-3).
+    hora_local_emissao = protocolo_para_imprimir.data_criacao - timedelta(hours=3)
+    
+    return render_template('impressao.html', protocolo=protocolo_para_imprimir, hora_local_emissao=hora_local_emissao)
 
 @app.route('/salvar_protocolo', methods=['POST'])
 def salvar_protocolo():

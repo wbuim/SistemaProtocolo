@@ -7,14 +7,14 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; margin: 0; padding: 0; }
         .via {
             width: 90%;
-            height: 48vh; /* Ocupa pouco menos da metade da altura da página */
+            height: 48vh;
             margin: 1vh auto;
             padding: 15px;
             box-sizing: border-box;
             position: relative;
         }
         .via.corte {
-            border-bottom: 2px dashed #999; /* Linha pontilhada para cortar */
+            border-bottom: 2px dashed #999;
         }
         .header { text-align: center; margin-bottom: 15px; }
         .header img { max-width: 100px; }
@@ -42,7 +42,7 @@
         </div>
         <div class="info-section">
             <p><strong>Nº Protocolo:</strong> {{ protocolo.numero_protocolo }}</p>
-            <p><strong>Emitido em:</strong> {{ protocolo.data_criacao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
+            <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
             <p><strong>Exame/Consulta:</strong> {{ protocolo.exame_solicitado }}</p>
@@ -61,7 +61,7 @@
         </div>
         <div class="info-section">
             <p><strong>Nº Protocolo:</strong> {{ protocolo.numero_protocolo }}</p>
-            <p><strong>Emitido em:</strong> {{ protocolo.data_criacao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
+            <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
             <p><strong>Exame/Consulta:</strong> {{ protocolo.exame_solicitado }}</p>
