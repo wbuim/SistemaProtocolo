@@ -7,16 +7,12 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# ### MUDANÇA PRINCIPAL AQUI ###
-# Alterado o nome do ficheiro do banco de dados para forçar a criação de um novo.
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v2.db')
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (COM NOVOS CAMPOS) ---
-class Protocolo(db.model):
+# --- MODELO DO BANCO DE DADOS (COM A CORREÇÃO) ---
+class Protocolo(db.Model): # <-- A CORREÇÃO ESTÁ AQUI! 'Model' com 'M' maiúsculo.
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
