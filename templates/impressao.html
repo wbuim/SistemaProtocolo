@@ -45,10 +45,10 @@
             <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
-            <p><strong>Exame/Consulta:</strong> {{ protocolo.exame_solicitado }}</p>
-            <p><strong>Especialidade:</strong> {{ protocolo.especialidade_solicitada }}</p>
+            <p><strong>Exame ou Especialidade:</strong> {{ protocolo.exame_especialidade }}</p>
             <p><strong>Médico Solicitante:</strong> {{ protocolo.medico_solicitante }}</p>
-            <p><strong>Unidade/Local de Destino:</strong> {{ protocolo.local_unidade }}</p>
+            <p><strong>Data do Pedido Médico:</strong> {{ protocolo.data_pedido_medico.strftime('%d/%m/%Y') if protocolo.data_pedido_medico else '' }}</p>
+            <p><strong>Unidade de Origem:</strong> {{ protocolo.unidade_origem }}</p>
             <p><strong>Data/Hora Agendada:</strong> {{ protocolo.data_atendimento.strftime('%d/%m/%Y') }} às {{ protocolo.hora_atendimento.strftime('%H:%M') }}</p>
         </div>
     </div>
@@ -64,10 +64,10 @@
             <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
-            <p><strong>Exame/Consulta:</strong> {{ protocolo.exame_solicitado }}</p>
-            <p><strong>Especialidade:</strong> {{ protocolo.especialidade_solicitada }}</p>
+            <p><strong>Exame ou Especialidade:</strong> {{ protocolo.exame_especialidade }}</p>
             <p><strong>Médico Solicitante:</strong> {{ protocolo.medico_solicitante }}</p>
-            <p><strong>Unidade/Local de Destino:</strong> {{ protocolo.local_unidade }}</p>
+            <p><strong>Data do Pedido Médico:</strong> {{ protocolo.data_pedido_medico.strftime('%d/%m/%Y') if protocolo.data_pedido_medico else '' }}</p>
+            <p><strong>Unidade de Origem:</strong> {{ protocolo.unidade_origem }}</p>
             <p><strong>Data/Hora Agendada:</strong> {{ protocolo.data_atendimento.strftime('%d/%m/%Y') }} às {{ protocolo.hora_atendimento.strftime('%H:%M') }}</p>
         </div>
     </div>

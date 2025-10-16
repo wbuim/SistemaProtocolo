@@ -49,6 +49,7 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s;
         }
         .button {
             display: block;
@@ -72,9 +73,14 @@
             margin-bottom: 20px;
         }
         .nav-button:hover { background-color: #5a6268; }
+
+        /* ### ESTILOS PARA AS CORES DA PRIORIDADE ### */
+        .prioridade-urgente { background-color: #f8d7da; border-color: #f5c6cb; }
+        .prioridade-eletivo { background-color: #cce5ff; border-color: #b8daff; }
+        .prioridade-retorno { background-color: #fff3cd; border-color: #ffeeba; }
     </style>
 </head>
-<body>
+<body onload="atualizarCorPrioridade()">
 
     <div class="header-bar">
         <span>Olá, <strong>{{ atendente_nome_completo }}</strong>!</span>
@@ -93,36 +99,34 @@
                     <input type="text" id="nome_paciente" name="nome_paciente" required>
                 </div>
                 <div class="form-group">
-                    <label for="local_unidade">Local/Unidade de Destino:</label>
-                    <input type="text" id="local_unidade" name="local_unidade" required>
-                </div>
-                <div class="form-group">
                     <label for="medico_solicitante">Médico Solicitante:</label>
                     <input type="text" id="medico_solicitante" name="medico_solicitante">
                 </div>
                 
                 <div class="form-group">
-                    <label for="unidade_origem">Unidade de Origem:</label>
+                    <label for="unidade_origem">Unidade de Saúde de Origem:</label>
                     <input type="text" id="unidade_origem" name="unidade_origem">
                 </div>
 
                 <div class="form-group">
                     <label for="prioridade">Prioridade:</label>
-                    <select id="prioridade" name="prioridade">
-                        <option value="Rotina">Rotina</option>
-                        <option value="Urgente">Urgente</option>
-                        <option value="Emergência">Emergência</option>
+                    <select id="prioridade" name="prioridade" onchange="atualizarCorPrioridade()">
+                        <option value="Eletivo">Eletivo (Azul)</option>
+                        <option value="Retorno">Retorno (Amarelo)</option>
+                        <option value="Urgente">Urgente (Vermelho)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="exame_solicitado">Exame Solicitado:</label>
-                    <input type="text" id="exame_solicitado" name="exame_solicitado" required>
+                    <label for="exame_especialidade">Exame ou Especialidade Desejada:</label>
+                    <input type="text" id="exame_especialidade" name="exame_especialidade" required>
                 </div>
+
                 <div class="form-group">
-                    <label for="especialidade_solicitada">Especialidade Solicitada:</label>
-                    <input type="text" id="especialidade_solicitada" name="especialidade_solicitada">
+                    <label for="data_pedido_medico">Data do Pedido Médico:</label>
+                    <input type="date" id="data_pedido_medico" name="data_pedido_medico">
                 </div>
+                
                 <div class="form-group">
                     <label for="data_atendimento">Data do Atendimento:</label>
                     <input type="date" id="data_atendimento" name="data_atendimento" required>
@@ -135,6 +139,24 @@
             </form>
         </div>
     </div>
+    
+    <script>
+        function atualizarCorPrioridade() {
+            const select = document.getElementById('prioridade');
+            const valor = select.value;
+            
+            // Remove todas as classes de cor primeiro
+            select.classList.remove('prioridade-urgente', 'prioridade-eletivo', 'prioridade-retorno');
+
+            if (valor === 'Urgente') {
+                select.classList.add('prioridade-urgente');
+            } else if (valor === 'Eletivo') {
+                select.classList.add('prioridade-eletivo');
+            } else if (valor === 'Retorno') {
+                select.classList.add('prioridade-retorno');
+            }
+        }
+    </script>
 
 </body>
 </html>

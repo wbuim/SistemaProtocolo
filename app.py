@@ -11,17 +11,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS ---
+# --- MODELO DO BANCO DE DADOS (COM AS NOVAS ALTERAÇÕES) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
-    local_unidade = db.Column(db.String(100), nullable=False)
+    # local_unidade foi REMOVIDO
     medico_solicitante = db.Column(db.String(200))
     unidade_origem = db.Column(db.String(100))
-    prioridade = db.Column(db.String(50), default='Rotina')
-    exame_solicitado = db.Column(db.String(200), nullable=False)
-    especialidade_solicitada = db.Column(db.String(100))
+    prioridade = db.Column(db.String(50), default='Eletivo')
+    exame_especialidade = db.Column(db.String(200), nullable=False) # ### CAMPO MESCLADO ###
+    # especialidade_solicitada foi REMOVIDO
+    data_pedido_medico = db.Column(db.Date, nullable=True) # ### NOVO CAMPO ###
     atendente = db.Column(db.String(100), nullable=False)
     data_atendimento = db.Column(db.Date, nullable=False)
     hora_atendimento = db.Column(db.Time, nullable=False)
@@ -81,13 +82,12 @@ def lista_protocolos():
             consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo':
             consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
-        elif filtro == 'especialidade':
-            consulta = consulta.filter(Protocolo.especialidade_solicitada.ilike(f'%{query}%'))
+        # ### FILTRO DE ESPECIALIDADE REMOVIDO ###
         elif filtro == 'medico':
             consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
         elif filtro == 'origem':
             consulta = consulta.filter(Protocolo.unidade_origem.ilike(f'%{query}%'))
-        else:
+        else: # Filtro padrão por 'nome' ou agora também por 'exame_especialidade'
             consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
             
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
@@ -109,11 +109,13 @@ def salvar_protocolo():
     if 'username' not in session:
         return redirect(url_for('login_page'))
     
-    # ### MUDANÇA PRINCIPAL AQUI ###
-    # Removemos a verificação 'if session.get('role') == 'admin''.
-    # Agora, o sistema sempre tenta ler a prioridade do formulário.
-    # Se o campo não for enviado por algum motivo, ele assume 'Rotina' como padrão.
-    prioridade_valor = request.form.get('prioridade', 'Rotina')
+    prioridade_valor = request.form.get('prioridade', 'Eletivo')
+    
+    # ### LÓGICA PARA PEGAR A NOVA DATA ###
+    data_pedido_str = request.form.get('data_pedido_medico')
+    data_pedido_obj = None
+    if data_pedido_str:
+        data_pedido_obj = datetime.strptime(data_pedido_str, '%Y-%m-%d').date()
 
     hoje = datetime.now().strftime('%Y%m%d')
     ultimo_protocolo = Protocolo.query.filter(Protocolo.numero_protocolo.like(f"{hoje}-%")).order_by(Protocolo.id.desc()).first()
@@ -123,12 +125,12 @@ def salvar_protocolo():
     novo_protocolo = Protocolo(
         numero_protocolo=novo_protocolo_num,
         nome_paciente=request.form['nome_paciente'],
-        local_unidade=request.form['local_unidade'],
+        # local_unidade foi REMOVIDO
         medico_solicitante=request.form['medico_solicitante'],
         unidade_origem=request.form['unidade_origem'],
-        prioridade=prioridade_valor, # Usa a prioridade vinda do formulário
-        exame_solicitado=request.form['exame_solicitado'],
-        especialidade_solicitada=request.form['especialidade_solicitada'],
+        prioridade=prioridade_valor,
+        exame_especialidade=request.form['exame_especialidade'], # ### CAMPO MESCLADO ###
+        data_pedido_medico=data_pedido_obj, # ### NOVO CAMPO ###
         atendente=session['full_name'],
         data_atendimento=datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date(),
         hora_atendimento=datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()

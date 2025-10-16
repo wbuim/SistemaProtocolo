@@ -29,7 +29,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 98%; /* Aumentei a largura para acomodar as novas colunas */
+            max-width: 98%;
             margin: auto;
             background: #fff;
             padding: 20px;
@@ -38,8 +38,8 @@
         }
         h1 { text-align: center; color: #333; }
         .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; } /* Diminuí um pouco mais a fonte */
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-break: break-word; } /* Adicionado word-break */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-break: break-word; }
         th { background-color: #f2f2f2; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         tr:hover { background-color: #f1f1f1; }
@@ -53,6 +53,11 @@
             margin-bottom: 20px;
         }
         .nav-button:hover { background-color: #0056b3; }
+
+        /* ### ESTILOS PARA AS CORES DA PRIORIDADE NA CÉLULA DA TABELA ### */
+        .prioridade-urgente { background-color: #f8d7da !important; font-weight: bold; }
+        .prioridade-eletivo { background-color: #cce5ff !important; }
+        .prioridade-retorno { background-color: #fff3cd !important; }
     </style>
 </head>
 <body>
@@ -72,7 +77,6 @@
                 <select name="filtro" style="padding: 8px;">
                     <option value="nome">Buscar por Nome</option>
                     <option value="protocolo">Buscar por Protocolo</option>
-                    <option value="especialidade">Buscar por Especialidade</option>
                     <option value="medico">Buscar por Médico</option>
                     <option value="origem">Buscar por Unidade de Origem</option>
                     {% if is_admin %}
@@ -88,8 +92,10 @@
                     <tr>
                         <th>Nº Protocolo</th>
                         <th>Paciente</th>
-                        <th>Exame Solicitado</th>
-                        <th>Especialidade</th> <th>Médico Solicitante</th> <th>Unidade de Origem</th>
+                        <th>Exame ou Especialidade</th>
+                        <th>Médico Solicitante</th>
+                        <th>Unidade de Saúde de Origem</th>
+                        <th>Data do Pedido Médico</th>
                         {% if is_admin %}
                         <th>Prioridade</th>
                         {% endif %}
@@ -102,10 +108,12 @@
                     <tr>
                         <td>{{ proto.numero_protocolo }}</td>
                         <td>{{ proto.nome_paciente }}</td>
-                        <td>{{ proto.exame_solicitado }}</td>
-                        <td>{{ proto.especialidade_solicitada }}</td> <td>{{ proto.medico_solicitante }}</td> <td>{{ proto.unidade_origem }}</td>
+                        <td>{{ proto.exame_especialidade }}</td>
+                        <td>{{ proto.medico_solicitante }}</td>
+                        <td>{{ proto.unidade_origem }}</td>
+                        <td>{{ proto.data_pedido_medico.strftime('%d/%m/%Y') if proto.data_pedido_medico else '' }}</td>
                         {% if is_admin %}
-                        <td>{{ proto.prioridade }}</td>
+                        <td class="prioridade-{{ proto.prioridade|lower }}">{{ proto.prioridade }}</td>
                         {% endif %}
                         <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
                         <td>{{ proto.atendente }}</td>
