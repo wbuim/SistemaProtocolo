@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta # <-- Importamos o timedelta
+from datetime import datetime, timedelta
 
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
@@ -100,9 +100,6 @@ def imprimir_protocolo(protocolo_id):
         return redirect(url_for('login_page'))
     
     protocolo_para_imprimir = Protocolo.query.get_or_404(protocolo_id)
-    
-    # ### MUDANÇA PRINCIPAL AQUI ###
-    # Pegamos a hora UTC do banco e subtraímos 3 horas para ajustar para o fuso de Brasília (UTC-3).
     hora_local_emissao = protocolo_para_imprimir.data_criacao - timedelta(hours=3)
     
     return render_template('impressao.html', protocolo=protocolo_para_imprimir, hora_local_emissao=hora_local_emissao)
@@ -112,9 +109,11 @@ def salvar_protocolo():
     if 'username' not in session:
         return redirect(url_for('login_page'))
     
-    prioridade_valor = "Rotina"
-    if session.get('role') == 'admin':
-        prioridade_valor = request.form.get('prioridade', 'Rotina')
+    # ### MUDANÇA PRINCIPAL AQUI ###
+    # Removemos a verificação 'if session.get('role') == 'admin''.
+    # Agora, o sistema sempre tenta ler a prioridade do formulário.
+    # Se o campo não for enviado por algum motivo, ele assume 'Rotina' como padrão.
+    prioridade_valor = request.form.get('prioridade', 'Rotina')
 
     hoje = datetime.now().strftime('%Y%m%d')
     ultimo_protocolo = Protocolo.query.filter(Protocolo.numero_protocolo.like(f"{hoje}-%")).order_by(Protocolo.id.desc()).first()
@@ -127,7 +126,7 @@ def salvar_protocolo():
         local_unidade=request.form['local_unidade'],
         medico_solicitante=request.form['medico_solicitante'],
         unidade_origem=request.form['unidade_origem'],
-        prioridade=prioridade_valor,
+        prioridade=prioridade_valor, # Usa a prioridade vinda do formulário
         exame_solicitado=request.form['exame_solicitado'],
         especialidade_solicitada=request.form['especialidade_solicitada'],
         atendente=session['full_name'],
