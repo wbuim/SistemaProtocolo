@@ -7,22 +7,20 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v2.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v3.db') # Usando a versão mais recente do BD
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (COM AS NOVAS ALTERAÇÕES) ---
+# --- MODELO DO BANCO DE DADOS ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
-    # local_unidade foi REMOVIDO
     medico_solicitante = db.Column(db.String(200))
     unidade_origem = db.Column(db.String(100))
     prioridade = db.Column(db.String(50), default='Eletivo')
-    exame_especialidade = db.Column(db.String(200), nullable=False) # ### CAMPO MESCLADO ###
-    # especialidade_solicitada foi REMOVIDO
-    data_pedido_medico = db.Column(db.Date, nullable=True) # ### NOVO CAMPO ###
+    exame_especialidade = db.Column(db.String(200), nullable=False)
+    data_pedido_medico = db.Column(db.Date, nullable=True)
     atendente = db.Column(db.String(100), nullable=False)
     data_atendimento = db.Column(db.Date, nullable=False)
     hora_atendimento = db.Column(db.Time, nullable=False)
@@ -31,9 +29,10 @@ class Protocolo(db.Model):
         return f'<Protocolo {self.numero_protocolo}>'
 
 # --- USUÁRIOS COM CARGOS (ROLES) ---
+### MUDANÇAS PARA O UTILIZADOR 'neto' ###
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema', 'role': 'admin'},
-    'neto':  {'password': 'protocolo', 'full_name': 'Neto Buim', 'role': 'user'},
+    'neto':  {'password': 'só neto', 'full_name': 'Neto Buim', 'role': 'admin'}, # Alterado para admin e nova senha
     'tuca':  {'password': 'tuca', 'full_name': 'Tuca da Silva', 'role': 'user'}
 }
 
@@ -82,12 +81,11 @@ def lista_protocolos():
             consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo':
             consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
-        # ### FILTRO DE ESPECIALIDADE REMOVIDO ###
         elif filtro == 'medico':
             consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
         elif filtro == 'origem':
             consulta = consulta.filter(Protocolo.unidade_origem.ilike(f'%{query}%'))
-        else: # Filtro padrão por 'nome' ou agora também por 'exame_especialidade'
+        else:
             consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
             
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
@@ -111,7 +109,6 @@ def salvar_protocolo():
     
     prioridade_valor = request.form.get('prioridade', 'Eletivo')
     
-    # ### LÓGICA PARA PEGAR A NOVA DATA ###
     data_pedido_str = request.form.get('data_pedido_medico')
     data_pedido_obj = None
     if data_pedido_str:
@@ -125,12 +122,11 @@ def salvar_protocolo():
     novo_protocolo = Protocolo(
         numero_protocolo=novo_protocolo_num,
         nome_paciente=request.form['nome_paciente'],
-        # local_unidade foi REMOVIDO
         medico_solicitante=request.form['medico_solicitante'],
         unidade_origem=request.form['unidade_origem'],
         prioridade=prioridade_valor,
-        exame_especialidade=request.form['exame_especialidade'], # ### CAMPO MESCLADO ###
-        data_pedido_medico=data_pedido_obj, # ### NOVO CAMPO ###
+        exame_especialidade=request.form['exame_especialidade'],
+        data_pedido_medico=data_pedido_obj,
         atendente=session['full_name'],
         data_atendimento=datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date(),
         hora_atendimento=datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()

@@ -74,7 +74,6 @@
         }
         .nav-button:hover { background-color: #5a6268; }
 
-        /* ### ESTILOS PARA AS CORES DA PRIORIDADE ### */
         .prioridade-urgente { background-color: #f8d7da; border-color: #f5c6cb; }
         .prioridade-eletivo { background-color: #cce5ff; border-color: #b8daff; }
         .prioridade-retorno { background-color: #fff3cd; border-color: #ffeeba; }
@@ -111,9 +110,9 @@
                 <div class="form-group">
                     <label for="prioridade">Prioridade:</label>
                     <select id="prioridade" name="prioridade" onchange="atualizarCorPrioridade()">
-                        <option value="Eletivo">Eletivo (Azul)</option>
-                        <option value="Retorno">Retorno (Amarelo)</option>
-                        <option value="Urgente">Urgente (Vermelho)</option>
+                        <option value="Eletivo">Eletivo</option>
+                        <option value="Retorno">Retorno</option>
+                        <option value="Urgente">Urgente</option>
                     </select>
                 </div>
 
@@ -145,7 +144,6 @@
             const select = document.getElementById('prioridade');
             const valor = select.value;
             
-            // Remove todas as classes de cor primeiro
             select.classList.remove('prioridade-urgente', 'prioridade-eletivo', 'prioridade-retorno');
 
             if (valor === 'Urgente') {
