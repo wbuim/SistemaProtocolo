@@ -7,14 +7,19 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v3.db')
+
+# ### MUDANÇA PRINCIPAL AQUI ###
+# Alterado o nome do ficheiro do banco de dados para forçar a criação de um novo.
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v4.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS ---
+# --- MODELO DO BANCO DE DADOS (COM AS NOVAS ALTERAÇÕES) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
+    nome_paciente = db.Column(db.String(200), nullable=False)
     medico_solicitante = db.Column(db.String(200))
     unidade_origem = db.Column(db.String(100))
     prioridade = db.Column(db.String(50), default='Eletivo')
@@ -30,7 +35,7 @@ class Protocolo(db.Model):
 # --- USUÁRIOS COM CARGOS (ROLES) ---
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema', 'role': 'admin'},
-    'neto':  {'password': 'neto', 'full_name': 'Neto Buim', 'role': 'admin'}, # ### ALTERAÇÃO DA SENHA AQUI ###
+    'neto':  {'password': 'neto', 'full_name': 'Neto Buim', 'role': 'admin'},
     'tuca':  {'password': 'tuca', 'full_name': 'Tuca da Silva', 'role': 'user'}
 }
 
