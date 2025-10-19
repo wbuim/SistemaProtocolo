@@ -3,19 +3,13 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 
-# --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# ### MUDANÇA PRINCIPAL AQUI ###
-# Alterado o nome do ficheiro do banco de dados para forçar a criação de um novo.
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v4.db')
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (COM AS NOVAS ALTERAÇÕES) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
@@ -32,14 +26,12 @@ class Protocolo(db.Model):
     def __repr__(self):
         return f'<Protocolo {self.numero_protocolo}>'
 
-# --- USUÁRIOS COM CARGOS (ROLES) ---
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema', 'role': 'admin'},
     'neto':  {'password': 'neto', 'full_name': 'Neto Buim', 'role': 'admin'},
     'tuca':  {'password': 'tuca', 'full_name': 'Tuca da Silva', 'role': 'user'}
 }
 
-# --- ROTAS DA APLICAÇÃO ---
 @app.route('/')
 def home():
     if 'username' in session:
@@ -138,7 +130,6 @@ def salvar_protocolo():
     db.session.commit()
     return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id))
 
-# --- INICIALIZAÇÃO DO SERVIDOR ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

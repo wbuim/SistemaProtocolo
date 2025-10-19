@@ -26,23 +26,24 @@
             font-weight: bold;
         }
         .main-content {
-            padding: 20px;
+            padding: 10px;
         }
         .container {
-            max-width: 98%;
+            width: 100%;
+            max-width: 1200px;
             margin: auto;
             background: #fff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
-        h1 { text-align: center; color: #333; }
-        .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        h1 { text-align: center; color: #333; font-size: 1.5em; }
+        .logo { display: block; margin: 0 auto 15px; max-width: 120px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-break: break-word; }
         th { background-color: #f2f2f2; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        tr:hover { background-color: #f1f1f1; }
         .nav-button {
             display: inline-block;
             text-decoration: none;
@@ -50,14 +51,62 @@
             color: white;
             padding: 10px 15px;
             border-radius: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .nav-button:hover { background-color: #0056b3; }
+        form { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+        form select, form input[type="text"] { padding: 8px; flex-grow: 1; min-width: 150px; }
+        form button { padding: 8px 15px; }
 
-        /* ### ESTILOS PARA AS CORES DA PRIORIDADE NA CÉLULA DA TABELA ### */
         .prioridade-urgente { background-color: #f8d7da !important; font-weight: bold; }
         .prioridade-eletivo { background-color: #cce5ff !important; }
         .prioridade-retorno { background-color: #fff3cd !important; }
+
+        @media screen and (max-width: 768px) {
+            table { border: 0; }
+            table thead {
+                border: none;
+                clip: rect(0 0 0 0);
+                height: 1px;
+                margin: -1px;
+                overflow: hidden;
+                padding: 0;
+                position: absolute;
+                width: 1px;
+            }
+            table tr {
+                border-bottom: 3px solid #ddd;
+                display: block;
+                margin-bottom: .625em;
+                background-color: #fff;
+                border-radius: 5px;
+                padding: .5em;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+             table td {
+                border-bottom: 1px solid #ddd;
+                display: block;
+                font-size: .9em;
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+            table td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: bold;
+                text-transform: uppercase;
+                margin-right: 10px;
+            }
+            table td:last-child { border-bottom: 0; }
+
+            .prioridade-urgente::before { content: "Prioridade"; }
+            .prioridade-eletivo::before { content: "Prioridade"; }
+            .prioridade-retorno::before { content: "Prioridade"; }
+            .prioridade-urgente { background-color: #f8d7da !important; }
+            .prioridade-eletivo { background-color: #cce5ff !important; }
+            .prioridade-retorno { background-color: #fff3cd !important; }
+        }
     </style>
 </head>
 <body>
@@ -73,8 +122,8 @@
             <h1>Protocolos Registrados</h1>
             <a href="{{ url_for('home') }}" class="nav-button">Cadastrar Novo Protocolo</a>
 
-            <form method="get" action="{{ url_for('lista_protocolos') }}" style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <select name="filtro" style="padding: 8px;">
+            <form method="get" action="{{ url_for('lista_protocolos') }}">
+                <select name="filtro">
                     <option value="nome">Buscar por Nome</option>
                     <option value="protocolo">Buscar por Protocolo</option>
                     <option value="medico">Buscar por Médico</option>
@@ -83,8 +132,8 @@
                     <option value="prioridade">Buscar por Prioridade</option>
                     {% endif %}
                 </select>
-                <input type="text" name="busca" placeholder="Digite sua busca..." style="flex-grow: 1; padding: 8px;">
-                <button type="submit" style="padding: 8px 15px;">Buscar</button>
+                <input type="text" name="busca" placeholder="Digite sua busca...">
+                <button type="submit">Buscar</button>
             </form>
 
             <table>
@@ -106,17 +155,17 @@
                 <tbody>
                     {% for proto in todos_protocolos %}
                     <tr>
-                        <td>{{ proto.numero_protocolo }}</td>
-                        <td>{{ proto.nome_paciente }}</td>
-                        <td>{{ proto.exame_especialidade }}</td>
-                        <td>{{ proto.medico_solicitante }}</td>
-                        <td>{{ proto.unidade_origem }}</td>
-                        <td>{{ proto.data_pedido_medico.strftime('%d/%m/%Y') if proto.data_pedido_medico else '' }}</td>
+                        <td data-label="Nº Protocolo">{{ proto.numero_protocolo }}</td>
+                        <td data-label="Paciente">{{ proto.nome_paciente }}</td>
+                        <td data-label="Exame/Especialidade">{{ proto.exame_especialidade }}</td>
+                        <td data-label="Médico Solicitante">{{ proto.medico_solicitante }}</td>
+                        <td data-label="Unidade de Origem">{{ proto.unidade_origem }}</td>
+                        <td data-label="Data Pedido">{{ proto.data_pedido_medico.strftime('%d/%m/%Y') if proto.data_pedido_medico else '' }}</td>
                         {% if is_admin %}
-                        <td class="prioridade-{{ proto.prioridade|lower }}">{{ proto.prioridade }}</td>
+                        <td data-label="Prioridade" class="prioridade-{{ proto.prioridade|lower }}">{{ proto.prioridade }}</td>
                         {% endif %}
-                        <td>{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ proto.atendente }}</td>
+                        <td data-label="Data Atendimento">{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
+                        <td data-label="Atendente">{{ proto.atendente }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
