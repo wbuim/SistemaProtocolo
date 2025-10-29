@@ -3,73 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Protocolos Ativos</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        .header-bar {
-            background-color: #e9ecef;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            border-bottom: 1px solid #ddd;
-        }
-        .header-bar a {
-            color: #dc3545;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .main-content {
-            padding: 10px;
-        }
-        .container {
-            width: 100%;
-            max-width: 1300px;
-            margin: auto;
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
+    <title>Lista de Protocolos Finalizados</title> <style>
+        /* Estilos copiados do lista_protocolos.html - Podem ser movidos para um CSS comum no futuro */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+        .header-bar { background-color: #e9ecef; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; border-bottom: 1px solid #ddd; }
+        .header-bar a { color: #dc3545; text-decoration: none; font-weight: bold; }
+        .main-content { padding: 10px; }
+        .container { width: 100%; max-width: 1300px; margin: auto; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
         h1 { text-align: center; color: #333; font-size: 1.5em; }
         .logo { display: block; margin: 0 auto 15px; max-width: 120px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
         th, td { border: 1px solid #ddd; padding: 6px; text-align: left; word-break: break-word; vertical-align: middle; }
         th { background-color: #f2f2f2; white-space: nowrap; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .nav-button {
-            display: inline-block;
-            text-decoration: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            margin-right: 10px; /* Espaço entre botões */
-        }
-        .nav-button.primary { background-color: #007BFF; }
-        .nav-button.secondary { background-color: #6c757d; }
+        .nav-button { display: inline-block; text-decoration: none; color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 15px; }
+        .nav-button.primary { background-color: #007BFF; } /* Botão azul padrão */
+        .nav-button.secondary { background-color: #6c757d; } /* Botão cinza */
         .nav-button:hover { opacity: 0.8; }
-        form.search-form { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; } /* Classe específica para o form de busca */
-        form.search-form select, form.search-form input[type="text"] { padding: 8px; flex-grow: 1; min-width: 150px; }
-        form.search-form button { padding: 8px 15px; }
-
-        .edit-prioridade-form { display: flex; gap: 5px; align-items: center; margin: 0;} /* Removido margin do form inline */
+        form { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+        form select, form input[type="text"] { padding: 8px; flex-grow: 1; min-width: 150px; }
+        form button { padding: 8px 15px; }
+        .edit-prioridade-form { display: flex; gap: 5px; align-items: center; }
         .edit-prioridade-form select { padding: 4px; font-size: 11px; flex-grow: 1; }
         .edit-prioridade-form button { padding: 4px 8px; font-size: 11px; background-color: #ffc107; border-color: #ffc107; color: #212529; cursor: pointer; }
         .edit-prioridade-form button:hover { background-color: #e0a800; border-color: #d39e00; }
         .prioridade-urgente { background-color: #f8d7da !important; font-weight: bold; }
         .prioridade-eletivo { background-color: #cce5ff !important; }
         .prioridade-retorno { background-color: #fff3cd !important; }
-        .btn-finalizar { background-color: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .btn-finalizar:hover { background-color: #218838; }
-        .finalize-form { margin: 0; padding: 0;} /* Remove margem do form do botão finalizar */
+        .btn-reativar { background-color: #17a2b8; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .btn-reativar:hover { background-color: #138496; }
         .flash-messages { list-style: none; padding: 0; margin: 0 0 15px 0; }
         .flash-messages li { padding: 10px 15px; margin-bottom: 10px; border-radius: 5px; font-size: 14px; }
         .flash-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -78,6 +40,7 @@
         .footer img { max-height: 40px; vertical-align: middle; margin-right: 5px; }
 
         @media screen and (max-width: 900px) {
+            /* Estilos responsivos copiados do lista_protocolos.html */
             table { border: 0; }
             table thead { border: none; clip: rect(0 0 0 0); height: 1px; margin: -1px; overflow: hidden; padding: 0; position: absolute; width: 1px; }
             table tr { border-bottom: 3px solid #ddd; display: block; margin-bottom: .625em; background-color: #fff; border-radius: 5px; padding: .5em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -106,11 +69,7 @@
     <div class="main-content">
         <div class="container">
             <img src="{{ url_for('static', filename='images/brasao.png') }}" alt="Brasão da Prefeitura" class="logo">
-            <h1>Protocolos Ativos</h1>
-            <a href="{{ url_for('home') }}" class="nav-button primary">Cadastrar Novo Protocolo</a>
-            <a href="{{ url_for('lista_inativos') }}" class="nav-button secondary">Visualizar Protocolos Inativos</a>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
+            <h1>Protocolos Finalizados</h1> <a href="{{ url_for('lista_protocolos') }}" class="nav-button secondary">Voltar para Protocolos Ativos</a> {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
                 <ul class=flash-messages>
                 {% for category, message in messages %}
@@ -120,8 +79,7 @@
               {% endif %}
             {% endwith %}
 
-            <form method="get" action="{{ url_for('lista_protocolos') }}" class="search-form">
-                <select name="filtro">
+            <form method="get" action="{{ url_for('lista_inativos') }}"> <select name="filtro">
                     <option value="nome">Buscar por Nome</option>
                     <option value="protocolo">Buscar por Protocolo</option>
                     <option value="medico">Buscar por Médico</option>
@@ -148,7 +106,8 @@
                         {% endif %}
                         <th>Data Atendimento</th>
                         <th>Atendente</th>
-                        <th>Ações</th>
+                        {% if is_admin %} <th>Ações</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -174,20 +133,22 @@
                         {% endif %}
                         <td data-label="Data Atendimento">{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
                         <td data-label="Atendente">{{ proto.atendente }}</td>
-                        <td data-label="Ações">
-                            <form action="{{ url_for('finalizar_protocolo', protocolo_id=proto.id) }}" method="post" class="finalize-form" onsubmit="return confirm('Tem certeza que deseja finalizar este protocolo?');">
-                                <button type="submit" class="btn-finalizar">Finalizar</button>
+                        {% if is_admin %} <td data-label="Ações">
+                            <form action="{{ url_for('reativar_protocolo', protocolo_id=proto.id) }}" method="post" onsubmit="return confirm('Tem certeza que deseja reativar este protocolo?');">
+                                <button type="submit" class="btn-reativar">Reativar</button>
                             </form>
                         </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-    </div>
 
-    <div class="footer">
-        <img src="{{ url_for('static', filename='images/w-code-logo.png') }}" alt="Logo W-Code"> Desenvolvido por W-Code - Sistema de Protocolos v1.0
+            <div class="footer">
+                <img src="{{ url_for('static', filename='images/w-code-logo.png') }}" alt="Logo W-Code"> Desenvolvido por W-Code - Sistema de Protocolos v1.0
+            </div>
+
+        </div>
     </div>
 
 </body>

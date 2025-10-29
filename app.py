@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, flash # Import 'flash' for messages
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 
@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v5.db') # Mantém v5
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v5.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -74,7 +74,7 @@ def lista_protocolos():
     query = request.args.get('busca')
     filtro = request.args.get('filtro')
     
-    consulta = Protocolo.query.filter_by(status='Ativo')
+    consulta = Protocolo.query.filter_by(status='Ativo') # AQUI continua filtrando por ATIVOS
     
     if query:
         if filtro == 'prioridade' and is_admin:
@@ -91,6 +91,36 @@ def lista_protocolos():
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
     
     return render_template('lista_protocolos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'], is_admin=is_admin)
+
+# ### NOVA ROTA PARA LISTAR PROTOCOLOS INATIVOS/FINALIZADOS ###
+@app.route('/inativos')
+def lista_inativos():
+    if 'username' not in session:
+        return redirect(url_for('login_page'))
+    
+    is_admin = session.get('role') == 'admin' # Também passa o status de admin
+    query = request.args.get('busca')
+    filtro = request.args.get('filtro')
+    
+    consulta = Protocolo.query.filter_by(status='Finalizado') # AQUI filtra por FINALIZADOS
+    
+    if query:
+        if filtro == 'prioridade' and is_admin:
+            consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
+        elif filtro == 'protocolo':
+            consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
+        elif filtro == 'medico':
+            consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
+        elif filtro == 'origem':
+            consulta = consulta.filter(Protocolo.unidade_origem.ilike(f'%{query}%'))
+        else:
+            consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
+            
+    protocolos = consulta.order_by(Protocolo.id.desc()).all()
+    
+    # Renderiza um NOVO template HTML para inativos
+    return render_template('lista_inativos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'], is_admin=is_admin)
+
 
 @app.route('/imprimir/<int:protocolo_id>')
 def imprimir_protocolo(protocolo_id):
@@ -137,6 +167,7 @@ def salvar_protocolo():
     )
     db.session.add(novo_protocolo)
     db.session.commit()
+    flash(f"Protocolo {novo_protocolo_num} gerado e salvo!", 'success') # Feedback para o usuário
     return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id))
 
 @app.route('/finalizar/<int:protocolo_id>', methods=['POST'])
@@ -147,13 +178,25 @@ def finalizar_protocolo(protocolo_id):
     protocolo_para_finalizar = Protocolo.query.get_or_404(protocolo_id)
     protocolo_para_finalizar.status = 'Finalizado'
     db.session.commit()
-    flash(f"Protocolo {protocolo_para_finalizar.numero_protocolo} finalizado com sucesso!", 'success') # Adiciona mensagem de sucesso
+    flash(f"Protocolo {protocolo_para_finalizar.numero_protocolo} finalizado com sucesso!", 'success')
     return redirect(url_for('lista_protocolos'))
 
-# ### NOVA ROTA PARA EDITAR A PRIORIDADE ###
+# ### NOVA ROTA PARA REATIVAR PROTOCOLO (NA LISTA DE INATIVOS) ###
+@app.route('/reativar/<int:protocolo_id>', methods=['POST'])
+def reativar_protocolo(protocolo_id):
+    if session.get('role') != 'admin': # Apenas admin pode reativar
+        flash("Acesso não autorizado para reativar protocolos.", 'danger')
+        return redirect(url_for('lista_inativos'))
+
+    protocolo_para_reativar = Protocolo.query.get_or_404(protocolo_id)
+    protocolo_para_reativar.status = 'Ativo'
+    db.session.commit()
+    flash(f"Protocolo {protocolo_para_reativar.numero_protocolo} reativado com sucesso!", 'success')
+    return redirect(url_for('lista_inativos'))
+
+
 @app.route('/editar_prioridade/<int:protocolo_id>', methods=['POST'])
 def editar_prioridade(protocolo_id):
-    # Segurança: Apenas admins podem editar
     if session.get('role') != 'admin':
         flash("Acesso não autorizado.", 'danger')
         return redirect(url_for('lista_protocolos'))
@@ -161,15 +204,19 @@ def editar_prioridade(protocolo_id):
     protocolo = Protocolo.query.get_or_404(protocolo_id)
     nova_prioridade = request.form.get('nova_prioridade')
     
-    # Validação simples
     if nova_prioridade in ['Eletivo', 'Retorno', 'Urgente']:
         protocolo.prioridade = nova_prioridade
         db.session.commit()
         flash(f"Prioridade do protocolo {protocolo.numero_protocolo} atualizada para {nova_prioridade}.", 'success')
     else:
         flash("Valor de prioridade inválido.", 'danger')
-        
+    
+    # Redireciona para a página atual de onde veio a requisição
+    referring_url = request.referrer
+    if 'lista_inativos' in referring_url:
+        return redirect(url_for('lista_inativos'))
     return redirect(url_for('lista_protocolos'))
+
 
 # --- INICIALIZAÇÃO DO SERVIDOR ---
 if __name__ == '__main__':
