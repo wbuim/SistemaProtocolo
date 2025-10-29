@@ -1,15 +1,17 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash # Import 'flash' for messages
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 
+# --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v4.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v5.db') # Mantém v5
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# --- MODELO DO BANCO DE DADOS ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
@@ -23,15 +25,18 @@ class Protocolo(db.Model):
     data_atendimento = db.Column(db.Date, nullable=False)
     hora_atendimento = db.Column(db.Time, nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(50), default='Ativo', nullable=False)
     def __repr__(self):
         return f'<Protocolo {self.numero_protocolo}>'
 
+# --- USUÁRIOS COM CARGOS (ROLES) ---
 USUARIOS_CADASTRADOS = {
     'admin': {'password': 'senha123', 'full_name': 'Administrador do Sistema', 'role': 'admin'},
     'neto':  {'password': 'neto', 'full_name': 'Neto Buim', 'role': 'admin'},
     'tuca':  {'password': 'tuca', 'full_name': 'Tuca da Silva', 'role': 'user'}
 }
 
+# --- ROTAS DA APLICAÇÃO ---
 @app.route('/')
 def home():
     if 'username' in session:
@@ -69,7 +74,7 @@ def lista_protocolos():
     query = request.args.get('busca')
     filtro = request.args.get('filtro')
     
-    consulta = Protocolo.query
+    consulta = Protocolo.query.filter_by(status='Ativo')
     
     if query:
         if filtro == 'prioridade' and is_admin:
@@ -107,7 +112,10 @@ def salvar_protocolo():
     data_pedido_str = request.form.get('data_pedido_medico')
     data_pedido_obj = None
     if data_pedido_str:
-        data_pedido_obj = datetime.strptime(data_pedido_str, '%Y-%m-%d').date()
+        try:
+            data_pedido_obj = datetime.strptime(data_pedido_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass 
 
     hoje = datetime.now().strftime('%Y%m%d')
     ultimo_protocolo = Protocolo.query.filter(Protocolo.numero_protocolo.like(f"{hoje}-%")).order_by(Protocolo.id.desc()).first()
@@ -124,12 +132,46 @@ def salvar_protocolo():
         data_pedido_medico=data_pedido_obj,
         atendente=session['full_name'],
         data_atendimento=datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date(),
-        hora_atendimento=datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()
+        hora_atendimento=datetime.strptime(request.form['horario_atendimento'], '%H:%M').time(),
+        status='Ativo'
     )
     db.session.add(novo_protocolo)
     db.session.commit()
     return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id))
 
+@app.route('/finalizar/<int:protocolo_id>', methods=['POST'])
+def finalizar_protocolo(protocolo_id):
+    if 'username' not in session:
+        return redirect(url_for('login_page'))
+    
+    protocolo_para_finalizar = Protocolo.query.get_or_404(protocolo_id)
+    protocolo_para_finalizar.status = 'Finalizado'
+    db.session.commit()
+    flash(f"Protocolo {protocolo_para_finalizar.numero_protocolo} finalizado com sucesso!", 'success') # Adiciona mensagem de sucesso
+    return redirect(url_for('lista_protocolos'))
+
+# ### NOVA ROTA PARA EDITAR A PRIORIDADE ###
+@app.route('/editar_prioridade/<int:protocolo_id>', methods=['POST'])
+def editar_prioridade(protocolo_id):
+    # Segurança: Apenas admins podem editar
+    if session.get('role') != 'admin':
+        flash("Acesso não autorizado.", 'danger')
+        return redirect(url_for('lista_protocolos'))
+        
+    protocolo = Protocolo.query.get_or_404(protocolo_id)
+    nova_prioridade = request.form.get('nova_prioridade')
+    
+    # Validação simples
+    if nova_prioridade in ['Eletivo', 'Retorno', 'Urgente']:
+        protocolo.prioridade = nova_prioridade
+        db.session.commit()
+        flash(f"Prioridade do protocolo {protocolo.numero_protocolo} atualizada para {nova_prioridade}.", 'success')
+    else:
+        flash("Valor de prioridade inválido.", 'danger')
+        
+    return redirect(url_for('lista_protocolos'))
+
+# --- INICIALIZAÇÃO DO SERVIDOR ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
