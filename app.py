@@ -1,21 +1,18 @@
 import os
-import json # ### Importamos a biblioteca JSON ###
+import json
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time # ### Adicionado date e time ###
 
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# ### NOME DO BANCO DE DADOS ATUALIZADO PARA v6 ###
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v6.db')
-
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v6.db') # Mantém v6
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS (COM CAMPO SNAPSHOT) ---
+# --- MODELO DO BANCO DE DADOS ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
@@ -30,7 +27,7 @@ class Protocolo(db.Model):
     hora_atendimento = db.Column(db.Time, nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50), default='Ativo', nullable=False)
-    dados_impressao = db.Column(db.Text, nullable=True) # ### NOVO CAMPO PARA O SNAPSHOT JSON ###
+    dados_impressao = db.Column(db.Text, nullable=True)
     def __repr__(self):
         return f'<Protocolo {self.numero_protocolo}>'
 
@@ -49,6 +46,7 @@ def home():
         return render_template('protocolo.html', atendente_nome_completo=session['full_name'], is_admin=is_admin)
     return redirect(url_for('login_page'))
 
+# ... (rotas /login, /logout, /lista, /inativos - sem alterações) ...
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     error = None
@@ -78,7 +76,6 @@ def lista_protocolos():
     filtro = request.args.get('filtro')
     consulta = Protocolo.query.filter_by(status='Ativo')
     if query:
-        # (Lógica de filtros omitida para brevidade - continua igual)
         if filtro == 'prioridade' and is_admin: consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo': consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
         elif filtro == 'medico': consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
@@ -95,7 +92,6 @@ def lista_inativos():
     filtro = request.args.get('filtro')
     consulta = Protocolo.query.filter_by(status='Finalizado')
     if query:
-        # (Lógica de filtros omitida para brevidade - continua igual)
         if filtro == 'prioridade' and is_admin: consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo': consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
         elif filtro == 'medico': consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
@@ -104,73 +100,73 @@ def lista_inativos():
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
     return render_template('lista_inativos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'], is_admin=is_admin)
 
+
 # Rota original de impressão (usada APENAS na criação)
 @app.route('/imprimir/<int:protocolo_id>')
 def imprimir_protocolo(protocolo_id):
     if 'username' not in session: return redirect(url_for('login_page'))
     protocolo = Protocolo.query.get_or_404(protocolo_id)
     hora_local_emissao = protocolo.data_criacao - timedelta(hours=3)
-    return render_template('impressao.html', protocolo=protocolo, hora_local_emissao=hora_local_emissao)
+    # Passa o próprio objeto protocolo E os objetos de data/hora separados para formatação
+    return render_template('impressao.html',
+                           protocolo=protocolo,
+                           hora_local_emissao=hora_local_emissao,
+                           data_atendimento_obj=protocolo.data_atendimento,
+                           hora_atendimento_obj=protocolo.hora_atendimento,
+                           data_pedido_medico_obj=protocolo.data_pedido_medico
+                          )
 
-# ### NOVA ROTA PARA REIMPRIMIR USANDO O SNAPSHOT ###
+# ### ROTA DE REIMPRESSÃO CORRIGIDA ###
 @app.route('/reimprimir/<int:protocolo_id>')
 def reimprimir_protocolo(protocolo_id):
     if 'username' not in session: return redirect(url_for('login_page'))
-    
-    protocolo = Protocolo.query.get_or_404(protocolo_id)
-    
-    if not protocolo.dados_impressao:
+
+    protocolo_db = Protocolo.query.get_or_404(protocolo_id) # Pega o objeto original para saber para onde voltar
+
+    if not protocolo_db.dados_impressao:
         flash("Não há dados de impressão salvos para este protocolo.", "danger")
-        # Decide para onde voltar dependendo do status atual
-        if protocolo.status == 'Ativo':
-            return redirect(url_for('lista_protocolos'))
-        else:
-            return redirect(url_for('lista_inativos'))
+        return redirect(url_for('lista_inativos') if protocolo_db.status == 'Finalizado' else url_for('lista_protocolos'))
 
     try:
-        # Carrega os dados do JSON
-        snapshot_data = json.loads(protocolo.dados_impressao)
-        
-        # Converte as strings de data/hora de volta para objetos datetime/time
-        # (Necessário para a formatação .strftime() no template)
-        hora_local_emissao_obj = datetime.fromisoformat(snapshot_data['hora_local_emissao_iso'])
-        data_atendimento_obj = datetime.fromisoformat(snapshot_data['data_atendimento_iso']).date()
-        hora_atendimento_obj = datetime.fromisoformat(snapshot_data['hora_atendimento_iso']).time()
+        snapshot_data = json.loads(protocolo_db.dados_impressao)
 
-        # Renderiza o template de impressão passando os dados do snapshot
-        return render_template('impressao.html', 
-                               protocolo=snapshot_data, # Passa o dicionário como 'protocolo'
-                               hora_local_emissao=hora_local_emissao_obj, # Passa o objeto datetime calculado
-                               # Passa os objetos data/hora recalculados para o template usar no strftime
-                               data_atendimento_obj=data_atendimento_obj,
-                               hora_atendimento_obj=hora_atendimento_obj
+        # Reconstroi os objetos usando as funções corretas e tratando None
+        hora_local_emissao_obj = datetime.fromisoformat(snapshot_data['hora_local_emissao_iso']) if snapshot_data.get('hora_local_emissao_iso') else None
+        data_atendimento_obj = date.fromisoformat(snapshot_data['data_atendimento_iso']) if snapshot_data.get('data_atendimento_iso') else None
+        hora_atendimento_obj = time.fromisoformat(snapshot_data['hora_atendimento_iso']) if snapshot_data.get('hora_atendimento_iso') else None
+        data_pedido_medico_obj = date.fromisoformat(snapshot_data['data_pedido_medico_iso']) if snapshot_data.get('data_pedido_medico_iso') else None
+
+        # Renderiza o template passando o snapshot E os objetos reconstruídos
+        return render_template('impressao.html',
+                               protocolo=snapshot_data, # Passa o dicionário como 'protocolo' para os dados
+                               hora_local_emissao=hora_local_emissao_obj, # Passa o objeto datetime real
+                               data_atendimento_obj=data_atendimento_obj, # Objeto date real
+                               hora_atendimento_obj=hora_atendimento_obj, # Objeto time real
+                               data_pedido_medico_obj=data_pedido_medico_obj # Objeto date real
                               )
     except Exception as e:
-        flash(f"Erro ao carregar dados de impressão: {e}", "danger")
-        if protocolo.status == 'Ativo':
-            return redirect(url_for('lista_protocolos'))
-        else:
-            return redirect(url_for('lista_inativos'))
+        flash(f"Erro ao carregar dados para reimpressão: {e}", "danger")
+        return redirect(url_for('lista_inativos') if protocolo_db.status == 'Finalizado' else url_for('lista_protocolos'))
 
 
 @app.route('/salvar_protocolo', methods=['POST'])
 def salvar_protocolo():
     if 'username' not in session: return redirect(url_for('login_page'))
-    
+
     prioridade_valor = request.form.get('prioridade', 'Eletivo')
     data_pedido_str = request.form.get('data_pedido_medico')
     data_pedido_obj = None
     if data_pedido_str:
         try: data_pedido_obj = datetime.strptime(data_pedido_str, '%Y-%m-%d').date()
-        except ValueError: pass 
+        except ValueError: pass
+
+    data_atendimento_obj = datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date()
+    hora_atendimento_obj = datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()
 
     hoje = datetime.now().strftime('%Y%m%d')
     ultimo_protocolo = Protocolo.query.filter(Protocolo.numero_protocolo.like(f"{hoje}-%")).order_by(Protocolo.id.desc()).first()
     novo_num = int(ultimo_protocolo.numero_protocolo.split('-')[1]) + 1 if ultimo_protocolo else 1
     novo_protocolo_num = f"{hoje}-{novo_num:03d}"
-    
-    data_atendimento_obj = datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date()
-    hora_atendimento_obj = datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()
 
     novo_protocolo = Protocolo(
         numero_protocolo=novo_protocolo_num,
@@ -185,58 +181,60 @@ def salvar_protocolo():
         hora_atendimento=hora_atendimento_obj,
         status='Ativo'
     )
-    
-    # ### CRIAÇÃO E SALVAMENTO DO SNAPSHOT JSON ###
-    # Precisamos calcular a hora local de emissão AGORA, antes de salvar
+
     hora_criacao_utc = datetime.utcnow()
     hora_local_emissao_agora = hora_criacao_utc - timedelta(hours=3)
-    
+
+    # ### SNAPSHOT CORRIGIDO ###
     snapshot = {
         'numero_protocolo': novo_protocolo_num,
-        'hora_local_emissao_iso': hora_local_emissao_agora.isoformat(), # Guarda em formato ISO
+        'hora_local_emissao_iso': hora_local_emissao_agora.isoformat(),
         'atendente': session['full_name'],
         'nome_paciente': novo_protocolo.nome_paciente,
         'exame_especialidade': novo_protocolo.exame_especialidade,
-        'especialidade_solicitada': request.form.get('especialidade_solicitada'), # Pegar do form, pois não está mais no modelo
         'medico_solicitante': novo_protocolo.medico_solicitante,
-        'local_unidade': request.form.get('local_unidade'), # Pegar do form, pois não está mais no modelo
-        'data_pedido_medico_iso': data_pedido_obj.isoformat() if data_pedido_obj else None, # Guarda em formato ISO
+        'data_pedido_medico_iso': data_pedido_obj.isoformat() if data_pedido_obj else None,
         'unidade_origem': novo_protocolo.unidade_origem,
-        'data_atendimento_iso': data_atendimento_obj.isoformat(), # Guarda em formato ISO
-        'hora_atendimento_iso': hora_atendimento_obj.isoformat() # Guarda em formato ISO
+        'data_atendimento_iso': data_atendimento_obj.isoformat() if data_atendimento_obj else None,
+        'hora_atendimento_iso': hora_atendimento_obj.isoformat() if hora_atendimento_obj else None,
+        # Adiciona campos que estavam faltando no snapshot original para o template de impressão
+        'especialidade_solicitada': request.form.get('especialidade_solicitada'),
+        'local_unidade': request.form.get('local_unidade'),
     }
-    novo_protocolo.dados_impressao = json.dumps(snapshot) # Converte o dicionário para texto JSON
-    
+    novo_protocolo.dados_impressao = json.dumps(snapshot)
+
     db.session.add(novo_protocolo)
     db.session.commit()
     flash(f"Protocolo {novo_protocolo_num} gerado e salvo!", 'success')
-    return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id)) # Continua a ir para a impressão normal na criação
+    return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id))
 
+# ... (rotas /finalizar, /reativar, /editar_prioridade - sem alterações) ...
 @app.route('/finalizar/<int:protocolo_id>', methods=['POST'])
 def finalizar_protocolo(protocolo_id):
-    if 'username' not in session: return redirect(url_for('login_page'))
-    protocolo = Protocolo.query.get_or_404(protocolo_id)
-    protocolo.status = 'Finalizado'
+    if 'username' not in session:
+        return redirect(url_for('login_page'))
+    protocolo_para_finalizar = Protocolo.query.get_or_404(protocolo_id)
+    protocolo_para_finalizar.status = 'Finalizado'
     db.session.commit()
-    flash(f"Protocolo {protocolo.numero_protocolo} finalizado!", 'success')
+    flash(f"Protocolo {protocolo_para_finalizar.numero_protocolo} finalizado com sucesso!", 'success')
     return redirect(url_for('lista_protocolos'))
 
 @app.route('/reativar/<int:protocolo_id>', methods=['POST'])
 def reativar_protocolo(protocolo_id):
     if session.get('role') != 'admin':
-        flash("Acesso não autorizado.", 'danger')
+        flash("Acesso não autorizado para reativar protocolos.", 'danger')
         return redirect(url_for('lista_inativos'))
-    protocolo = Protocolo.query.get_or_404(protocolo_id)
-    protocolo.status = 'Ativo'
+    protocolo_para_reativar = Protocolo.query.get_or_404(protocolo_id)
+    protocolo_para_reativar.status = 'Ativo'
     db.session.commit()
-    flash(f"Protocolo {protocolo.numero_protocolo} reativado!", 'success')
+    flash(f"Protocolo {protocolo_para_reativar.numero_protocolo} reativado com sucesso!", 'success')
     return redirect(url_for('lista_inativos'))
 
 @app.route('/editar_prioridade/<int:protocolo_id>', methods=['POST'])
 def editar_prioridade(protocolo_id):
     if session.get('role') != 'admin':
         flash("Acesso não autorizado.", 'danger')
-        return redirect(request.referrer or url_for('lista_protocolos')) # Volta para onde veio
+        return redirect(request.referrer or url_for('lista_protocolos'))
     protocolo = Protocolo.query.get_or_404(protocolo_id)
     nova_prioridade = request.form.get('nova_prioridade')
     if nova_prioridade in ['Eletivo', 'Retorno', 'Urgente']:
@@ -245,8 +243,10 @@ def editar_prioridade(protocolo_id):
         flash(f"Prioridade atualizada para {nova_prioridade}.", 'success')
     else:
         flash("Prioridade inválida.", 'danger')
-    return redirect(request.referrer or url_for('lista_protocolos')) # Volta para onde veio
+    return redirect(request.referrer or url_for('lista_protocolos'))
 
+
+# --- INICIALIZAÇÃO DO SERVIDOR ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
