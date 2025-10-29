@@ -30,28 +30,18 @@
         .prioridade-urgente { background-color: #f8d7da !important; font-weight: bold; }
         .prioridade-eletivo { background-color: #cce5ff !important; }
         .prioridade-retorno { background-color: #fff3cd !important; }
-        .btn-finalizar { background-color: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 5px; } /* Adicionado margem */
+        .btn-finalizar { background-color: #28a745; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-left: 5px; }
         .btn-finalizar:hover { background-color: #218838; }
-        .finalize-form { margin: 0; padding: 0; display: inline-block;} /* Formulário inline */
-        .btn-reimprimir { /* Estilo para o link Reimprimir */
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 11px;
-            vertical-align: middle; /* Alinha com o botão */
-        }
+        .finalize-form { margin: 0; padding: 0; display: inline-block;}
+        .btn-reimprimir { display: inline-block; background-color: #007bff; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 11px; vertical-align: middle; }
         .btn-reimprimir:hover { background-color: #0056b3; }
-        .actions-cell { white-space: nowrap; } /* Evita quebra de linha na célula de ações */
+        .actions-cell { white-space: nowrap; }
         .flash-messages { list-style: none; padding: 0; margin: 0 0 15px 0; }
         .flash-messages li { padding: 10px 15px; margin-bottom: 10px; border-radius: 5px; font-size: 14px; }
         .flash-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .flash-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .footer { text-align: center; margin-top: 40px; padding: 20px; font-size: 12px; color: #888; border-top: 1px solid #eee; background-color: #fdfdfd; }
-        /* ### ESTILO DA LOGO ATUALIZADO ### */
-        .footer img { max-height: 80px; vertical-align: middle; margin-right: 5px; }
+        .footer img { max-height: 80px; vertical-align: middle; margin-right: 5px; } /* Logo com 80px */
 
         @media screen and (max-width: 900px) {
             table { border: 0; }
@@ -61,7 +51,7 @@
             table td::before { content: attr(data-label); float: left; font-weight: bold; text-transform: uppercase; margin-right: 10px; white-space: nowrap; }
             table td:last-child { border-bottom: 0; }
             td[data-label="Ações"] .finalize-form,
-            td[data-label="Ações"] .btn-reimprimir { float: right; margin-left: 5px; } /* Ajuste para botões na direita */
+            td[data-label="Ações"] .btn-reimprimir { float: right; margin-left: 5px; }
             td[data-label="Prioridade"] form { margin: 0; padding: 0; display: block; text-align: right;}
             td[data-label="Prioridade"] button { float: none; display: inline-block; margin-top: 5px;}
             td[data-label="Prioridade"] select { width: auto; display: inline-block; }
@@ -117,14 +107,13 @@
                     <tr>
                         <th>Nº Protocolo</th>
                         <th>Paciente</th>
-                        <th>Exame ou Especialidade</th>
+                        <th>Telefone</th> <th>Exame ou Especialidade</th>
                         <th>Médico Solicitante</th>
                         <th>Unidade de Saúde de Origem</th>
                         <th>Data do Pedido Médico</th>
                         {% if is_admin %}
                         <th>Prioridade</th>
                         {% endif %}
-                        <th>Data Atendimento</th>
                         <th>Atendente</th>
                         <th>Ações</th>
                     </tr>
@@ -134,7 +123,7 @@
                     <tr>
                         <td data-label="Nº Protocolo">{{ proto.numero_protocolo }}</td>
                         <td data-label="Paciente">{{ proto.nome_paciente }}</td>
-                        <td data-label="Exame/Especialidade">{{ proto.exame_especialidade }}</td>
+                        <td data-label="Telefone">{{ proto.telefone_paciente }}</td> <td data-label="Exame/Especialidade">{{ proto.exame_especialidade }}</td>
                         <td data-label="Médico Solicitante">{{ proto.medico_solicitante }}</td>
                         <td data-label="Unidade de Origem">{{ proto.unidade_origem }}</td>
                         <td data-label="Data Pedido">{{ proto.data_pedido_medico.strftime('%d/%m/%Y') if proto.data_pedido_medico else '' }}</td>
@@ -150,13 +139,14 @@
                             </form>
                         </td>
                         {% endif %}
-                        <td data-label="Data Atendimento">{{ proto.data_atendimento.strftime('%d/%m/%Y') }}</td>
                         <td data-label="Atendente">{{ proto.atendente }}</td>
                         <td data-label="Ações" class="actions-cell">
                             <a href="{{ url_for('reimprimir_protocolo', protocolo_id=proto.id) }}" class="btn-reimprimir" target="_blank">Reimprimir</a>
+                            {% if is_admin %}
                             <form action="{{ url_for('finalizar_protocolo', protocolo_id=proto.id) }}" method="post" class="finalize-form" onsubmit="return confirm('Tem certeza que deseja finalizar este protocolo?');">
                                 <button type="submit" class="btn-finalizar">Finalizar</button>
                             </form>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}

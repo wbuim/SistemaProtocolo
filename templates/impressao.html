@@ -5,11 +5,24 @@
     <title>Protocolo de Consulta/Exame - {{ protocolo.numero_protocolo }}</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; margin: 0; padding: 0; }
-        .via { width: 90%; height: 48vh; margin: 1vh auto; padding: 15px; box-sizing: border-box; position: relative; }
-        .via.corte { border-bottom: 2px dashed #999; }
+        .via {
+            width: 90%;
+            height: 48vh;
+            margin: 1vh auto;
+            padding: 15px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .via.corte {
+            border-bottom: 2px dashed #999;
+        }
         .header { text-align: center; margin-bottom: 15px; }
         .header img { max-width: 100px; }
-        .header h2 { margin: 0; font-size: 18px; line-height: 1.2; }
+        .header h2 {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.2;
+        }
         .info-section p { margin: 4px 0; font-size: 14px; }
         .info-section strong { display: inline-block; width: 180px; }
         .titulo-via { text-align: right; font-weight: bold; font-style: italic; color: #555; }
@@ -32,12 +45,12 @@
             <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') if hora_local_emissao else 'N/A' }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
+            <p><strong>Telefone:</strong> {{ protocolo.telefone_paciente }}</p>
             <p><strong>Exame ou Especialidade:</strong> {{ protocolo.exame_especialidade }}</p>
             <p><strong>Médico Solicitante:</strong> {{ protocolo.medico_solicitante }}</p>
             <p><strong>Data do Pedido Médico:</strong> {{ data_pedido_medico_obj.strftime('%d/%m/%Y') if data_pedido_medico_obj else '' }}</p>
             <p><strong>Unidade de Origem:</strong> {{ protocolo.unidade_origem }}</p>
-            <p><strong>Data/Hora Agendada:</strong> {{ data_atendimento_obj.strftime('%d/%m/%Y') if data_atendimento_obj else '' }} às {{ hora_atendimento_obj.strftime('%H:%M') if hora_atendimento_obj else '' }}</p>
-        </div>
+            </div>
     </div>
 
     <div class="via">
@@ -51,12 +64,12 @@
             <p><strong>Emitido em:</strong> {{ hora_local_emissao.strftime('%d/%m/%Y às %H:%M:%S') if hora_local_emissao else 'N/A' }}</p>
             <p><strong>Gerado por:</strong> {{ protocolo.atendente }}</p>
             <p><strong>Paciente:</strong> {{ protocolo.nome_paciente }}</p>
+            <p><strong>Telefone:</strong> {{ protocolo.telefone_paciente }}</p>
             <p><strong>Exame ou Especialidade:</strong> {{ protocolo.exame_especialidade }}</p>
             <p><strong>Médico Solicitante:</strong> {{ protocolo.medico_solicitante }}</p>
             <p><strong>Data do Pedido Médico:</strong> {{ data_pedido_medico_obj.strftime('%d/%m/%Y') if data_pedido_medico_obj else '' }}</p>
             <p><strong>Unidade de Origem:</strong> {{ protocolo.unidade_origem }}</p>
-            <p><strong>Data/Hora Agendada:</strong> {{ data_atendimento_obj.strftime('%d/%m/%Y') if data_atendimento_obj else '' }} às {{ hora_atendimento_obj.strftime('%H:%M') if hora_atendimento_obj else '' }}</p>
-        </div>
+            </div>
     </div>
 
     <script> window.onload = function() { window.print(); }; </script>

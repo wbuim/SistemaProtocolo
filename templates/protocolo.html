@@ -14,7 +14,15 @@
         .logo { display: block; margin: 0 auto 20px; max-width: 150px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="date"], input[type="time"], select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; transition: background-color 0.3s, border-color 0.3s; }
+        /* Adicionado type="tel" ao seletor */
+        input[type="text"], input[type="date"], input[type="time"], input[type="tel"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
         .button { display: block; width: 100%; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
         .button:hover { background-color: #0056b3; }
         .nav-button { display: inline-block; text-decoration: none; background-color: #6c757d; color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 20px; }
@@ -23,7 +31,8 @@
         .prioridade-eletivo { background-color: #cce5ff; border-color: #b8daff; }
         .prioridade-retorno { background-color: #fff3cd; border-color: #ffeeba; }
         .footer { text-align: center; margin-top: 40px; padding: 20px; font-size: 12px; color: #888; border-top: 1px solid #eee; background-color: #fdfdfd; }
-        .footer img { max-height: 80px; vertical-align: middle; margin-right: 5px; } /* Estilo para a sua logo */
+        /* ### ESTILO DA LOGO ATUALIZADO ### */
+        .footer img { max-height: 80px; vertical-align: middle; margin-right: 5px; }
     </style>
 </head>
 <body onload="atualizarCorPrioridade()">
@@ -44,6 +53,9 @@
                     <label for="nome_paciente">Nome do Paciente:</label>
                     <input type="text" id="nome_paciente" name="nome_paciente" required>
                 </div>
+                <div class="form-group">
+                    <label for="telefone_paciente">Telefone do Paciente:</label>
+                    <input type="tel" id="telefone_paciente" name="telefone_paciente" placeholder="(XX) XXXXX-XXXX"> </div>
                 <div class="form-group">
                     <label for="medico_solicitante">Médico Solicitante:</label>
                     <input type="text" id="medico_solicitante" name="medico_solicitante">
@@ -68,21 +80,14 @@
                     <label for="data_pedido_medico">Data do Pedido Médico:</label>
                     <input type="date" id="data_pedido_medico" name="data_pedido_medico">
                 </div>
-                <div class="form-group">
-                    <label for="data_atendimento">Data do Atendimento:</label>
-                    <input type="date" id="data_atendimento" name="data_atendimento" required>
-                </div>
-                <div class="form-group">
-                    <label for="horario_atendimento">Horário do Atendimento:</label>
-                    <input type="time" id="horario_atendimento" name="horario_atendimento" required>
-                </div>
                 <button type="submit" class="button">Gerar e Imprimir Protocolo</button>
             </form>
         </div>
     </div>
 
     <div class="footer">
-        <img src="{{ url_for('static', filename='images/w-code-logo.png') }}" alt="Logo W-Code"> Desenvolvido por W-Code - Sistema de Protocolos v1.0
+        <img src="{{ url_for('static', filename='images/w-code-logo.png') }}" alt="Logo W-Code">
+        Desenvolvido por W-Code - Sistema de Protocolos v1.0
     </div>
 
     <script>

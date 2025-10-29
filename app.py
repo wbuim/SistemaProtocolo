@@ -2,29 +2,33 @@ import os
 import json
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timedelta, date, time # ### Adicionado date e time ###
+from datetime import datetime, timedelta, date, time
 
 # --- CONFIGURAÇÃO INICIAL ---
 app = Flask(__name__)
 app.secret_key = 'chave_super_secreta_12345'
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v6.db') # Mantém v6
+
+# ### NOME DO BANCO DE DADOS ATUALIZADO PARA v7 ###
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'dados_v7.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- MODELO DO BANCO DE DADOS ---
+# --- MODELO DO BANCO DE DADOS (COM NOVAS ALTERAÇÕES) ---
 class Protocolo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     numero_protocolo = db.Column(db.String(100), unique=True, nullable=False)
     nome_paciente = db.Column(db.String(200), nullable=False)
+    telefone_paciente = db.Column(db.String(20), nullable=True) # ### NOVO CAMPO TELEFONE ###
     medico_solicitante = db.Column(db.String(200))
     unidade_origem = db.Column(db.String(100))
     prioridade = db.Column(db.String(50), default='Eletivo')
     exame_especialidade = db.Column(db.String(200), nullable=False)
     data_pedido_medico = db.Column(db.Date, nullable=True)
     atendente = db.Column(db.String(100), nullable=False)
-    data_atendimento = db.Column(db.Date, nullable=False)
-    hora_atendimento = db.Column(db.Time, nullable=False)
+    # data_atendimento REMOVIDO
+    # hora_atendimento REMOVIDO
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50), default='Ativo', nullable=False)
     dados_impressao = db.Column(db.Text, nullable=True)
@@ -46,7 +50,6 @@ def home():
         return render_template('protocolo.html', atendente_nome_completo=session['full_name'], is_admin=is_admin)
     return redirect(url_for('login_page'))
 
-# ... (rotas /login, /logout, /lista, /inativos - sem alterações) ...
 @app.route('/login', methods=['GET', 'POST'])
 def login_page():
     error = None
@@ -76,11 +79,12 @@ def lista_protocolos():
     filtro = request.args.get('filtro')
     consulta = Protocolo.query.filter_by(status='Ativo')
     if query:
+        # Lógica de filtros...
         if filtro == 'prioridade' and is_admin: consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo': consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
         elif filtro == 'medico': consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
         elif filtro == 'origem': consulta = consulta.filter(Protocolo.unidade_origem.ilike(f'%{query}%'))
-        else: consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%'))
+        else: consulta = consulta.filter(Protocolo.nome_paciente.ilike(f'%{query}%')) # Pode adicionar busca por telefone aqui se desejar
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
     return render_template('lista_protocolos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'], is_admin=is_admin)
 
@@ -92,6 +96,7 @@ def lista_inativos():
     filtro = request.args.get('filtro')
     consulta = Protocolo.query.filter_by(status='Finalizado')
     if query:
+        # Lógica de filtros...
         if filtro == 'prioridade' and is_admin: consulta = consulta.filter(Protocolo.prioridade.ilike(f'%{query}%'))
         elif filtro == 'protocolo': consulta = consulta.filter(Protocolo.numero_protocolo.ilike(f'%{query}%'))
         elif filtro == 'medico': consulta = consulta.filter(Protocolo.medico_solicitante.ilike(f'%{query}%'))
@@ -100,28 +105,25 @@ def lista_inativos():
     protocolos = consulta.order_by(Protocolo.id.desc()).all()
     return render_template('lista_inativos.html', todos_protocolos=protocolos, atendente_nome_completo=session['full_name'], is_admin=is_admin)
 
-
 # Rota original de impressão (usada APENAS na criação)
 @app.route('/imprimir/<int:protocolo_id>')
 def imprimir_protocolo(protocolo_id):
     if 'username' not in session: return redirect(url_for('login_page'))
     protocolo = Protocolo.query.get_or_404(protocolo_id)
     hora_local_emissao = protocolo.data_criacao - timedelta(hours=3)
-    # Passa o próprio objeto protocolo E os objetos de data/hora separados para formatação
+    # Passa o próprio objeto protocolo e a data/hora separada
     return render_template('impressao.html',
                            protocolo=protocolo,
                            hora_local_emissao=hora_local_emissao,
-                           data_atendimento_obj=protocolo.data_atendimento,
-                           hora_atendimento_obj=protocolo.hora_atendimento,
                            data_pedido_medico_obj=protocolo.data_pedido_medico
                           )
 
-# ### ROTA DE REIMPRESSÃO CORRIGIDA ###
+# Rota para REIMPRIMIR usando o SNAPSHOT
 @app.route('/reimprimir/<int:protocolo_id>')
 def reimprimir_protocolo(protocolo_id):
     if 'username' not in session: return redirect(url_for('login_page'))
 
-    protocolo_db = Protocolo.query.get_or_404(protocolo_id) # Pega o objeto original para saber para onde voltar
+    protocolo_db = Protocolo.query.get_or_404(protocolo_id)
 
     if not protocolo_db.dados_impressao:
         flash("Não há dados de impressão salvos para este protocolo.", "danger")
@@ -132,17 +134,13 @@ def reimprimir_protocolo(protocolo_id):
 
         # Reconstroi os objetos usando as funções corretas e tratando None
         hora_local_emissao_obj = datetime.fromisoformat(snapshot_data['hora_local_emissao_iso']) if snapshot_data.get('hora_local_emissao_iso') else None
-        data_atendimento_obj = date.fromisoformat(snapshot_data['data_atendimento_iso']) if snapshot_data.get('data_atendimento_iso') else None
-        hora_atendimento_obj = time.fromisoformat(snapshot_data['hora_atendimento_iso']) if snapshot_data.get('hora_atendimento_iso') else None
         data_pedido_medico_obj = date.fromisoformat(snapshot_data['data_pedido_medico_iso']) if snapshot_data.get('data_pedido_medico_iso') else None
 
         # Renderiza o template passando o snapshot E os objetos reconstruídos
         return render_template('impressao.html',
-                               protocolo=snapshot_data, # Passa o dicionário como 'protocolo' para os dados
-                               hora_local_emissao=hora_local_emissao_obj, # Passa o objeto datetime real
-                               data_atendimento_obj=data_atendimento_obj, # Objeto date real
-                               hora_atendimento_obj=hora_atendimento_obj, # Objeto time real
-                               data_pedido_medico_obj=data_pedido_medico_obj # Objeto date real
+                               protocolo=snapshot_data,
+                               hora_local_emissao=hora_local_emissao_obj,
+                               data_pedido_medico_obj=data_pedido_medico_obj
                               )
     except Exception as e:
         flash(f"Erro ao carregar dados para reimpressão: {e}", "danger")
@@ -160,9 +158,6 @@ def salvar_protocolo():
         try: data_pedido_obj = datetime.strptime(data_pedido_str, '%Y-%m-%d').date()
         except ValueError: pass
 
-    data_atendimento_obj = datetime.strptime(request.form['data_atendimento'], '%Y-%m-%d').date()
-    hora_atendimento_obj = datetime.strptime(request.form['horario_atendimento'], '%H:%M').time()
-
     hoje = datetime.now().strftime('%Y%m%d')
     ultimo_protocolo = Protocolo.query.filter(Protocolo.numero_protocolo.like(f"{hoje}-%")).order_by(Protocolo.id.desc()).first()
     novo_num = int(ultimo_protocolo.numero_protocolo.split('-')[1]) + 1 if ultimo_protocolo else 1
@@ -171,35 +166,32 @@ def salvar_protocolo():
     novo_protocolo = Protocolo(
         numero_protocolo=novo_protocolo_num,
         nome_paciente=request.form['nome_paciente'],
+        telefone_paciente=request.form['telefone_paciente'], # ### SALVANDO TELEFONE ###
         medico_solicitante=request.form['medico_solicitante'],
         unidade_origem=request.form['unidade_origem'],
         prioridade=prioridade_valor,
         exame_especialidade=request.form['exame_especialidade'],
         data_pedido_medico=data_pedido_obj,
         atendente=session['full_name'],
-        data_atendimento=data_atendimento_obj,
-        hora_atendimento=hora_atendimento_obj,
+        # data_atendimento e hora_atendimento REMOVIDOS
         status='Ativo'
     )
 
     hora_criacao_utc = datetime.utcnow()
     hora_local_emissao_agora = hora_criacao_utc - timedelta(hours=3)
 
-    # ### SNAPSHOT CORRIGIDO ###
+    # ### SNAPSHOT ATUALIZADO ###
     snapshot = {
         'numero_protocolo': novo_protocolo_num,
         'hora_local_emissao_iso': hora_local_emissao_agora.isoformat(),
         'atendente': session['full_name'],
         'nome_paciente': novo_protocolo.nome_paciente,
+        'telefone_paciente': novo_protocolo.telefone_paciente, # Adicionado telefone
         'exame_especialidade': novo_protocolo.exame_especialidade,
         'medico_solicitante': novo_protocolo.medico_solicitante,
         'data_pedido_medico_iso': data_pedido_obj.isoformat() if data_pedido_obj else None,
         'unidade_origem': novo_protocolo.unidade_origem,
-        'data_atendimento_iso': data_atendimento_obj.isoformat() if data_atendimento_obj else None,
-        'hora_atendimento_iso': hora_atendimento_obj.isoformat() if hora_atendimento_obj else None,
-        # Adiciona campos que estavam faltando no snapshot original para o template de impressão
-        'especialidade_solicitada': request.form.get('especialidade_solicitada'),
-        'local_unidade': request.form.get('local_unidade'),
+        # Campos antigos removidos do snapshot
     }
     novo_protocolo.dados_impressao = json.dumps(snapshot)
 
@@ -208,11 +200,13 @@ def salvar_protocolo():
     flash(f"Protocolo {novo_protocolo_num} gerado e salvo!", 'success')
     return redirect(url_for('imprimir_protocolo', protocolo_id=novo_protocolo.id))
 
-# ... (rotas /finalizar, /reativar, /editar_prioridade - sem alterações) ...
+# ### ROTA FINALIZAR COM RESTRIÇÃO DE ADMIN ###
 @app.route('/finalizar/<int:protocolo_id>', methods=['POST'])
 def finalizar_protocolo(protocolo_id):
-    if 'username' not in session:
-        return redirect(url_for('login_page'))
+    if session.get('role') != 'admin': # Verifica se é admin
+        flash("Apenas administradores podem finalizar protocolos.", 'danger')
+        return redirect(url_for('lista_protocolos'))
+
     protocolo_para_finalizar = Protocolo.query.get_or_404(protocolo_id)
     protocolo_para_finalizar.status = 'Finalizado'
     db.session.commit()
@@ -222,12 +216,12 @@ def finalizar_protocolo(protocolo_id):
 @app.route('/reativar/<int:protocolo_id>', methods=['POST'])
 def reativar_protocolo(protocolo_id):
     if session.get('role') != 'admin':
-        flash("Acesso não autorizado para reativar protocolos.", 'danger')
+        flash("Acesso não autorizado.", 'danger')
         return redirect(url_for('lista_inativos'))
-    protocolo_para_reativar = Protocolo.query.get_or_404(protocolo_id)
-    protocolo_para_reativar.status = 'Ativo'
+    protocolo = Protocolo.query.get_or_404(protocolo_id)
+    protocolo.status = 'Ativo'
     db.session.commit()
-    flash(f"Protocolo {protocolo_para_reativar.numero_protocolo} reativado com sucesso!", 'success')
+    flash(f"Protocolo {protocolo.numero_protocolo} reativado!", 'success')
     return redirect(url_for('lista_inativos'))
 
 @app.route('/editar_prioridade/<int:protocolo_id>', methods=['POST'])
@@ -245,8 +239,6 @@ def editar_prioridade(protocolo_id):
         flash("Prioridade inválida.", 'danger')
     return redirect(request.referrer or url_for('lista_protocolos'))
 
-
-# --- INICIALIZAÇÃO DO SERVIDOR ---
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
